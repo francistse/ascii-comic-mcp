@@ -1,0 +1,1222 @@
+"""
+ASCII Comic MCP Server
+
+Comic-style ASCII art with speech bubbles, bold banners, and action effects.
+Uses categorical composition of aesthetic functors with zero rendering dependencies.
+
+Functors:
+- box_drawing: Border styles, line weights, corner treatments
+- ascii_shading: Character gradients, contrast, patterns
+- layout_composition: Canvas size, alignment, spatial organization
+"""
+
+from fastmcp import FastMCP
+from typing import Dict, Any, List, Optional, Literal
+from dataclasses import dataclass
+import math
+
+# Initialize MCP server
+mcp = FastMCP("ASCII Comic Generator")
+
+
+# ============================================================================
+# LAYER 1: Data Structures (Categorical Objects)
+# ============================================================================
+
+@dataclass
+class BoxDrawingParams:
+    """Box drawing aesthetic parameters"""
+    line_style: Literal['light', 'heavy', 'double', 'rounded']
+    corner_type: Literal['sharp', 'rounded', 'beveled']
+    symmetry: Literal['bilateral', 'radial', 'asymmetric']
+
+
+@dataclass
+class ShadingParams:
+    """ASCII shading parameters"""
+    palette_type: Literal['ascii_standard', 'blocks', 'dots', 'density', 'braille']
+    contrast: float  # 0.0-1.0
+    direction: Literal['horizontal', 'vertical', 'radial', 'diagonal']
+    dither: bool
+
+
+@dataclass
+class LayoutParams:
+    """Layout composition parameters"""
+    width: int
+    height: int
+    horizontal_align: Literal['left', 'center', 'right']
+    vertical_align: Literal['top', 'middle', 'bottom']
+    padding: int
+
+
+# ============================================================================
+# LAYER 2: Intentionality (Visual Vocabularies)
+# ============================================================================
+
+UNICODE_SETS = {
+    'light': {
+        'horizontal': '─', 'vertical': '│',
+        'top_left': '┌', 'top_right': '┐',
+        'bottom_left': '└', 'bottom_right': '┘',
+        'cross': '┼', 't_down': '┬', 't_up': '┴', 't_left': '┤', 't_right': '├',
+        'intentionality': 'Clean, minimal, professional - optimal for documentation'
+    },
+    'heavy': {
+        'horizontal': '━', 'vertical': '┃',
+        'top_left': '┏', 'top_right': '┓',
+        'bottom_left': '┗', 'bottom_right': '┛',
+        'cross': '╋', 't_down': '┳', 't_up': '┻', 't_left': '┫', 't_right': '┣',
+        'intentionality': 'Bold, emphatic - draws attention and establishes hierarchy'
+    },
+    'double': {
+        'horizontal': '═', 'vertical': '║',
+        'top_left': '╔', 'top_right': '╗',
+        'bottom_left': '╚', 'bottom_right': '╝',
+        'cross': '╬', 't_down': '╦', 't_up': '╩', 't_left': '╣', 't_right': '╠',
+        'intentionality': 'Formal, structured - conveys authority and permanence'
+    },
+    'rounded': {
+        'horizontal': '─', 'vertical': '│',
+        'top_left': '╭', 'top_right': '╮',
+        'bottom_left': '╰', 'bottom_right': '╯',
+        'cross': '┼', 't_down': '┬', 't_up': '┴', 't_left': '┤', 't_right': '├',
+        'intentionality': 'Friendly, approachable - reduces visual tension'
+    }
+}
+
+SHADING_PALETTES = {
+    'ascii_standard': {
+        'chars': ' .:-=+*#%@',
+        'texture': 'grainy',
+        'intentionality': 'Classic ASCII art - universally compatible'
+    },
+    'blocks': {
+        'chars': ' ░▒▓█',
+        'texture': 'smooth',
+        'intentionality': 'Smooth gradients - modern terminal aesthetics'
+    },
+    'dots': {
+        'chars': ' ·∘○●◉',
+        'texture': 'dotted',
+        'intentionality': 'Geometric precision - technical diagrams'
+    },
+    'density': {
+        'chars': ' .,;!lI$@',
+        'texture': 'dense',
+        'intentionality': 'High detail - complex shading'
+    },
+    'braille': {
+        'chars': '⠀⠁⠃⠇⠏⠟⠿⣿',
+        'texture': 'fine',
+        'intentionality': 'Ultra-fine detail - maximum resolution'
+    }
+}
+
+
+# ============================================================================
+# LAYER 3: Rendering Engine
+# ============================================================================
+
+class ASCIIArtRenderer:
+    """Deterministic ASCII art generation from categorical parameters"""
+    
+    def __init__(
+        self,
+        box_params: BoxDrawingParams,
+        shading_params: ShadingParams,
+        layout_params: LayoutParams
+    ):
+        self.box = box_params
+        self.shading = shading_params
+        self.layout = layout_params
+        self.chars = UNICODE_SETS[box_params.line_style]
+        self.palette = SHADING_PALETTES[shading_params.palette_type]['chars']
+    
+    def render_bordered_box(self, title: Optional[str] = None) -> str:
+        """Render a bordered box with optional shading"""
+        
+        lines = []
+        w = self.layout.width
+        h = self.layout.height
+        
+        # Top border
+        if title:
+            title_display = f" {title} "
+            title_len = len(title_display)
+            left_line = self.chars['horizontal'] * ((w - 2 - title_len) // 2)
+            right_line = self.chars['horizontal'] * ((w - 2 - title_len + 1) // 2)
+            top = self.chars['top_left'] + left_line + title_display + right_line + self.chars['top_right']
+        else:
+            top = self.chars['top_left'] + (self.chars['horizontal'] * (w - 2)) + self.chars['top_right']
+        lines.append(top)
+        
+        # Middle rows with shading
+        for y in range(h - 2):
+            row = self.chars['vertical']
+            
+            for x in range(w - 2):
+                # Calculate shading value based on direction
+                shade_value = self._calculate_shade_value(x, y, w - 2, h - 2)
+                
+                # Apply contrast
+                shade_value = self._apply_contrast(shade_value)
+                
+                # Map to character
+                char_idx = int(shade_value * (len(self.palette) - 1))
+                char_idx = max(0, min(char_idx, len(self.palette) - 1))
+                
+                row += self.palette[char_idx]
+            
+            row += self.chars['vertical']
+            lines.append(row)
+        
+        # Bottom border
+        bottom = self.chars['bottom_left'] + (self.chars['horizontal'] * (w - 2)) + self.chars['bottom_right']
+        lines.append(bottom)
+        
+        return '\n'.join(lines)
+    
+    def _calculate_shade_value(self, x: int, y: int, width: int, height: int) -> float:
+        """Calculate shading value 0.0-1.0 based on position and direction"""
+        
+        center_x = width / 2
+        center_y = height / 2
+        
+        if self.shading.direction == 'horizontal':
+            return x / width if width > 0 else 0
+        
+        elif self.shading.direction == 'vertical':
+            return y / height if height > 0 else 0
+        
+        elif self.shading.direction == 'radial':
+            dx = (x - center_x) / center_x if center_x > 0 else 0
+            dy = (y - center_y) / center_y if center_y > 0 else 0
+            dist = math.sqrt(dx * dx + dy * dy)
+            return min(dist, 1.0)
+        
+        elif self.shading.direction == 'diagonal':
+            return (x + y) / (width + height) if (width + height) > 0 else 0
+        
+        else:
+            return 0.5
+    
+    def _apply_contrast(self, value: float) -> float:
+        """Apply contrast adjustment to shade value"""
+        
+        # Apply contrast curve
+        if self.shading.contrast < 0.5:
+            # Reduce contrast - compress to middle
+            range_compress = self.shading.contrast * 2
+            return 0.5 + (value - 0.5) * range_compress
+        else:
+            # Increase contrast - expand from middle
+            range_expand = (self.shading.contrast - 0.5) * 2 + 1
+            if value < 0.5:
+                return 0.5 - (0.5 - value) * range_expand
+            else:
+                return 0.5 + (value - 0.5) * range_expand
+        
+        return max(0.0, min(1.0, value))
+    
+    def render_table(self, headers: List[str], rows: List[List[str]]) -> str:
+        """Render a data table with borders"""
+        
+        # Calculate column widths
+        col_widths = [len(h) for h in headers]
+        for row in rows:
+            for i, cell in enumerate(row):
+                if i < len(col_widths):
+                    col_widths[i] = max(col_widths[i], len(str(cell)))
+        
+        lines = []
+        
+        # Top border
+        top = self.chars['top_left']
+        for i, width in enumerate(col_widths):
+            top += self.chars['horizontal'] * (width + 2)
+            if i < len(col_widths) - 1:
+                top += self.chars['t_down']
+        top += self.chars['top_right']
+        lines.append(top)
+        
+        # Header row
+        header_row = self.chars['vertical']
+        for i, header in enumerate(headers):
+            header_row += f" {header.ljust(col_widths[i])} "
+            if i < len(headers) - 1:
+                header_row += self.chars['vertical']
+        header_row += self.chars['vertical']
+        lines.append(header_row)
+        
+        # Header separator
+        sep = self.chars['t_right']
+        for i, width in enumerate(col_widths):
+            sep += self.chars['horizontal'] * (width + 2)
+            if i < len(col_widths) - 1:
+                sep += self.chars['cross']
+        sep += self.chars['t_left']
+        lines.append(sep)
+        
+        # Data rows
+        for row in rows:
+            data_row = self.chars['vertical']
+            for i, cell in enumerate(row):
+                if i < len(col_widths):
+                    data_row += f" {str(cell).ljust(col_widths[i])} "
+                    if i < len(row) - 1:
+                        data_row += self.chars['vertical']
+            data_row += self.chars['vertical']
+            lines.append(data_row)
+        
+        # Bottom border
+        bottom = self.chars['bottom_left']
+        for i, width in enumerate(col_widths):
+            bottom += self.chars['horizontal'] * (width + 2)
+            if i < len(col_widths) - 1:
+                bottom += self.chars['t_up']
+        bottom += self.chars['bottom_right']
+        lines.append(bottom)
+        
+        return '\n'.join(lines)
+
+
+# ============================================================================
+# MCP TOOLS
+# ============================================================================
+
+@mcp.tool()
+def create_ascii_box(
+    width: int = 50,
+    height: int = 15,
+    title: str = "",
+    line_style: Literal['light', 'heavy', 'double', 'rounded'] = 'light',
+    shading_palette: Literal['ascii_standard', 'blocks', 'dots', 'density', 'braille'] = 'ascii_standard',
+    shading_direction: Literal['horizontal', 'vertical', 'radial', 'diagonal'] = 'radial',
+    contrast: float = 0.7
+) -> str:
+    """
+    Create ASCII art box with border and optional shading.
+    
+    Args:
+        width: Box width in characters (20-120)
+        height: Box height in characters (5-50)
+        title: Optional title text in top border
+        line_style: Border style (light=minimal, heavy=bold, double=formal, rounded=friendly)
+        shading_palette: Character set for shading (ascii_standard, blocks, dots, density, braille)
+        shading_direction: Gradient direction (horizontal, vertical, radial, diagonal)
+        contrast: Shading contrast 0.0-1.0 (low=subtle, high=dramatic)
+    
+    Returns:
+        ASCII art as multi-line string
+    
+    Example:
+        create_ascii_box(width=40, height=10, title="Status", line_style='double', 
+                        shading_palette='blocks', contrast=0.8)
+    """
+    
+    # Clamp parameters
+    width = max(20, min(120, width))
+    height = max(5, min(50, height))
+    contrast = max(0.0, min(1.0, contrast))
+    
+    # Create parameter objects
+    box_params = BoxDrawingParams(
+        line_style=line_style,
+        corner_type='sharp' if line_style in ['light', 'heavy', 'double'] else 'rounded',
+        symmetry='bilateral'
+    )
+    
+    shading_params = ShadingParams(
+        palette_type=shading_palette,
+        contrast=contrast,
+        direction=shading_direction,
+        dither=False
+    )
+    
+    layout_params = LayoutParams(
+        width=width,
+        height=height,
+        horizontal_align='center',
+        vertical_align='middle',
+        padding=1
+    )
+    
+    # Render
+    renderer = ASCIIArtRenderer(box_params, shading_params, layout_params)
+    return renderer.render_bordered_box(title if title else None)
+
+
+@mcp.tool()
+def create_ascii_table(
+    headers: list[str],
+    rows: list[list[str]],
+    line_style: Literal['light', 'heavy', 'double', 'rounded'] = 'light'
+) -> str:
+    """
+    Create ASCII table with headers and data rows.
+    
+    Args:
+        headers: List of column headers
+        rows: List of rows, each row is a list of cell values
+        line_style: Border style (light, heavy, double, rounded)
+    
+    Returns:
+        ASCII table as multi-line string
+    
+    Example:
+        create_ascii_table(
+            headers=["Name", "Status", "Progress"],
+            rows=[
+                ["Task 1", "Complete", "100%"],
+                ["Task 2", "Running", "65%"],
+                ["Task 3", "Pending", "0%"]
+            ],
+            line_style='double'
+        )
+    """
+    
+    box_params = BoxDrawingParams(
+        line_style=line_style,
+        corner_type='sharp' if line_style != 'rounded' else 'rounded',
+        symmetry='bilateral'
+    )
+    
+    shading_params = ShadingParams(
+        palette_type='ascii_standard',
+        contrast=0.5,
+        direction='horizontal',
+        dither=False
+    )
+    
+    layout_params = LayoutParams(
+        width=80,
+        height=20,
+        horizontal_align='left',
+        vertical_align='top',
+        padding=1
+    )
+    
+    renderer = ASCIIArtRenderer(box_params, shading_params, layout_params)
+    return renderer.render_table(headers, rows)
+
+
+@mcp.tool()
+def list_ascii_styles() -> dict:
+    """
+    List all available ASCII art styles with their intentionality.
+
+    Returns:
+        Dictionary of styles and their visual/semantic properties
+    """
+
+    return {
+        "box_styles": {
+            style: {
+                "sample_chars": f"{chars['top_left']}{chars['horizontal']*3}{chars['top_right']}",
+                "intentionality": chars['intentionality']
+            }
+            for style, chars in UNICODE_SETS.items()
+        },
+        "shading_palettes": {
+            name: {
+                "characters": palette['chars'],
+                "texture": palette['texture'],
+                "intentionality": palette['intentionality']
+            }
+            for name, palette in SHADING_PALETTES.items()
+        }
+    }
+
+
+@mcp.tool()
+def create_speech_bubble(
+    text: str,
+    bubble_style: Literal['oval', 'rectangular', 'cloud', 'thought'] = 'oval',
+    tail_position: Literal['bottom-left', 'bottom-right', 'bottom-center', 'left', 'right'] = 'bottom-left',
+    line_style: Literal['light', 'heavy', 'double', 'rounded'] = 'rounded'
+) -> str:
+    """
+    Create a comic-style speech bubble with a tail pointing to the speaker.
+
+    Args:
+        text: The text content of the bubble
+        bubble_style: Shape of bubble (oval, rectangular, cloud, thought)
+        tail_position: Where the tail points (bottom-left, bottom-right, bottom-center, left, right)
+        line_style: Border style (light, heavy, double, rounded)
+
+    Returns:
+        ASCII speech bubble as multi-line string
+
+    Example:
+        create_speech_bubble(text="HELLO WORLD!", bubble_style='oval',
+                           tail_position='bottom-left', line_style='rounded')
+    """
+
+    lines = text.split('\n')
+    max_len = max(len(line) for line in lines)
+    width = max(max_len + 4, 10)
+    height = len(lines)
+
+    chars = UNICODE_SETS[line_style]
+
+    if bubble_style == 'oval':
+        return _render_oval_bubble(lines, width, height, tail_position, chars)
+    elif bubble_style == 'rectangular':
+        return _render_rectangular_bubble(lines, width, height, tail_position, chars)
+    elif bubble_style == 'cloud' or bubble_style == 'thought':
+        return _render_thought_bubble(lines, width, height, tail_position, chars)
+    else:
+        return _render_oval_bubble(lines, width, height, tail_position, chars)
+
+
+def _render_oval_bubble(lines: List[str], width: int, height: int, tail_pos: str, chars: dict) -> str:
+    """Render an oval speech bubble with tail"""
+    result = []
+
+    top_line = chars['top_left'] + chars['horizontal'] * (width - 2) + chars['top_right']
+    result.append(top_line)
+
+    for i, line in enumerate(lines):
+        padded = line.center(width - 4)
+        result.append(chars['vertical'] + padded + chars['vertical'])
+
+    bottom_line = chars['bottom_left'] + chars['horizontal'] * (width - 2) + chars['bottom_right']
+    result.append(bottom_line)
+
+    result = _add_tail_to_bubble(result, tail_pos, chars)
+
+    return '\n'.join(result)
+
+
+def _render_rectangular_bubble(lines: List[str], width: int, height: int, tail_pos: str, chars: dict) -> str:
+    """Render a rectangular speech bubble with tail"""
+    result = []
+
+    top_line = chars['top_left'] + chars['horizontal'] * (width - 2) + chars['top_right']
+    result.append(top_line)
+
+    for line in lines:
+        padded = line.ljust(width - 4)
+        result.append(chars['vertical'] + ' ' + padded[:width - 4] + ' ' + chars['vertical'])
+
+    bottom_line = chars['bottom_left'] + chars['horizontal'] * (width - 2) + chars['bottom_right']
+    result.append(bottom_line)
+
+    result = _add_tail_to_bubble(result, tail_pos, chars)
+
+    return '\n'.join(result)
+
+
+def _render_thought_bubble(lines: List[str], width: int, height: int, tail_pos: str, chars: dict) -> str:
+    """Render a thought cloud bubble with small circles as tail"""
+    result = []
+
+    top = '    ' + chars['top_left'] + chars['horizontal'] * (width - 2) + chars['top_right']
+    result.append(top)
+
+    for line in lines:
+        padded = line.center(width - 4)
+        result.append(chars['vertical'] + ' ' + padded + ' ' + chars['vertical'])
+
+    bottom = '    ' + chars['bottom_left'] + chars['horizontal'] * (width - 2) + chars['bottom_right']
+    result.append(bottom)
+
+    if tail_pos == 'bottom-right':
+        result.append('                         o   o')
+        result.append('                          o')
+    else:
+        result.append('o   o')
+        result.append(' o')
+
+    return '\n'.join(result)
+
+
+def _add_tail_to_bubble(bubble: List[str], tail_pos: str, chars: dict) -> List[str]:
+    """Add a speech tail to the bottom of a bubble"""
+    width = len(bubble[0])
+
+    if tail_pos == 'bottom-left':
+        tail_line1 = ' ' * 3 + '\\'
+        tail_line2 = ' ' * 2 + '\\'
+        tail_line3 = ' ' * 1 + '\\'
+    elif tail_pos == 'bottom-right':
+        tail_line1 = ' ' * (width - 4) + '/'
+        tail_line2 = ' ' * (width - 3) + '/'
+        tail_line3 = ' ' * (width - 2) + '/'
+    elif tail_pos == 'bottom-center':
+        tail_line1 = ' ' * (width // 2 - 1) + '\\/'
+        tail_line2 = ' ' * (width // 2) + '\\'
+        tail_line3 = ' ' * (width // 2 + 1) + '\\'
+    else:
+        return bubble
+
+    bubble.append(tail_line1)
+    if len(bubble) < 5:
+        bubble.append(tail_line2)
+    bubble.append(tail_line3)
+
+    return bubble
+
+
+BANNER_FONTS = {
+    'block': {
+        'A': ['AAAAA', 'A   A', 'AAAAA', 'A   A', 'A   A'],
+        'B': ['BBBB', 'B  B', 'BBBB', 'B  B', 'BBBB'],
+        'C': [' CCC', 'C   ', 'C   ', 'C   ', ' CCC'],
+        'D': ['DDDD', 'D  D', 'D   D', 'D  D', 'DDDD'],
+        'E': ['EEEEE', 'E    ', 'EEE  ', 'E    ', 'EEEEE'],
+        'F': ['FFFFF', 'F    ', 'FFF  ', 'F    ', 'F    '],
+        'G': [' GGG', 'G   ', 'G  GG', 'G   G', ' GGG'],
+        'H': ['H   H', 'H   H', 'HHHHH', 'H   H', 'H   H'],
+        'I': ['IIIII', '  I  ', '  I  ', '  I  ', 'IIIII'],
+        'J': ['JJJJJ', '   J ', '   J ', 'J  J ', ' JJ '],
+        'K': ['K   K', 'K  K ', 'KK   ', 'K  K ', 'K   K'],
+        'L': ['L    ', 'L    ', 'L    ', 'L    ', 'LLLLL'],
+        'M': ['M   M', 'MM MM', 'M M M', 'M   M', 'M   M'],
+        'N': ['N   N', 'NN  N', 'N N N', 'N  NN', 'N   N'],
+        'O': [' OOO', 'O   O', 'O   O', 'O   O', ' OOO'],
+        'P': ['PPPP', 'P  P', 'PPPP', 'P   ', 'P   '],
+        'Q': [' QQQ', 'Q   Q', 'Q Q Q', 'Q  Q ', ' QQ Q'],
+        'R': ['RRRR', 'R  R', 'RRRR', 'R  R', 'R   R'],
+        'S': [' SSS', 'S   ', ' SSS', '   S', 'SSS '],
+        'T': ['TTTTT', '  T  ', '  T  ', '  T  ', '  T  '],
+        'U': ['U   U', 'U   U', 'U   U', 'U   U', ' UUU'],
+        'V': ['V   V', 'V   V', 'V   V', ' V V ', '  V  '],
+        'W': ['W   W', 'W   W', 'W W W', 'WW WW', 'W   W'],
+        'X': ['X   X', 'X   X', ' X X ', 'X   X', 'X   X'],
+        'Y': ['Y   Y', ' Y Y ', '  Y  ', '  Y  ', '  Y  '],
+        'Z': ['ZZZZZ', '   Z ', '  Z  ', ' Z   ', 'ZZZZZ'],
+        '0': [' 000', '0   0', '0   0', '0   0', ' 000'],
+        '1': ['  1 ', ' 11 ', '  1 ', '  1 ', '11111'],
+        '2': [' 222', '2   2', '  22', ' 2  ', '22222'],
+        '3': ['3333', '   3', ' 333', '   3', '3333'],
+        '4': ['4  4', '4  4', '44444', '   4', '   4'],
+        '5': ['55555', '5    ', '5555 ', '    5', '5555 '],
+        '6': [' 666', '6   ', '6666 ', '6   6', ' 666'],
+        '7': ['77777', '   7 ', '  7  ', ' 7   ', ' 7   '],
+        '8': [' 888', '8   8', ' 888', '8   8', ' 888'],
+        '9': [' 999', '9   9', ' 9999', '    9', ' 999'],
+        '!': ['  !', '  !', '  !', '    ', '  !'],
+        '?': [' ???', '   ?', '  ??', '    ?', '  ?'],
+        ' ': ['   ', '   ', '   ', '   ', '   '],
+        '.': ['   ', '   ', '   ', '   ', ' . '],
+        ',': ['   ', '   ', '   ', '  ,', ' ,'],
+        "'": [' . ', '  .', '   ', '   ', '   '],
+        ':': ['   ', ' . ', '   ', ' . ', '   '],
+        '-': ['    ', '    ', 'EEE ', '    ', '    '],
+        '_': ['    ', '    ', '    ', '    ', '____'],
+    }
+}
+
+
+@mcp.tool()
+def create_comic_banner(
+    text: str,
+    font_style: Literal['block', 'banner1', 'banner2', 'standard'] = 'block',
+    emphasis: Literal['none', 'stars', 'underline', 'border'] = 'none',
+    align: Literal['left', 'center', 'right'] = 'center',
+    width: Optional[int] = None
+) -> str:
+    """
+    Create bold, stylized multi-line text banner in comic style.
+
+    Args:
+        text: Text to convert to banner style (uppercase works best)
+        font_style: Font style (block=block letters, banner1/banner2=variations, standard=spaced)
+        emphasis: Decoration (none, stars, underline, border)
+        align: Text alignment within the banner (left, center, right)
+        width: Optional minimum width for the banner
+
+    Returns:
+        ASCII banner as multi-line string
+
+    Example:
+        create_comic_banner(text="HELLO WORLD!!!", font_style='block', emphasis='stars')
+    """
+
+    text = text.upper()
+    font = BANNER_FONTS.get(font_style, BANNER_FONTS['block'])
+
+    words = text.split()
+    char_patterns = []
+    for word_idx, word in enumerate(words):
+        for char_idx, char in enumerate(word):
+            if char in font:
+                char_patterns.append(font[char])
+            else:
+                char_patterns.append(font.get(char.upper(), font[' ']))
+        if word_idx < len(words) - 1:
+            char_patterns.append(font[' '])
+
+    if not char_patterns:
+        return text
+
+    num_lines = len(char_patterns[0])
+    result_lines = []
+
+    for line_idx in range(num_lines):
+        line = ''
+        for pattern in char_patterns:
+            if line_idx < len(pattern):
+                line += pattern[line_idx] + ' '
+        result_lines.append(line.rstrip())
+
+    if width:
+        max_len = max(len(line) for line in result_lines)
+        padding = width - max_len
+        if padding > 0:
+            if align == 'center':
+                pad_left = padding // 2
+                pad_right = padding - pad_left
+                result_lines = [' ' * pad_left + line + ' ' * pad_right for line in result_lines]
+            elif align == 'right':
+                result_lines = [' ' * padding + line for line in result_lines]
+
+    if emphasis == 'stars':
+        max_len = max(len(line) for line in result_lines)
+        star_line = '★ ' * ((max_len // 2) + 1)
+        result_lines.insert(0, star_line[:max_len + 2])
+        result_lines.append(star_line[:max_len + 2])
+        result_lines = [f'★ {line:<{max_len}} ★' for line in result_lines]
+    elif emphasis == 'underline':
+        max_len = max(len(line) for line in result_lines)
+        result_lines.append('★' * (max_len + 4))
+    elif emphasis == 'border':
+        max_len = max(len(line) for line in result_lines)
+        border_line = '┌' + '─' * (max_len + 2) + '┐'
+        result_lines = [f'│ {line:<{max_len}} │' for line in result_lines]
+        result_lines.insert(0, border_line)
+        result_lines.append('└' + '─' * (max_len + 2) + '┘')
+
+    return '\n'.join(result_lines)
+
+
+ACTION_EFFECTS = {
+    'BANG': [
+        ['█████', '█      ', '█████', '    █', '█████'],
+        ['█   █', '█      ', '█   █', '█    █', '█   █'],
+        ['█   █', '█      ', '█████', '    █', '█   █'],
+        ['█   █', '█      ', '█   █', '    █', '█   █'],
+        ['█████', '█████ ', '█   █', '    █', '█████'],
+    ],
+    'BOOM': [
+        ['█████', '█   █', '█████', '█   █', '█   █'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+        ['█████', '█████', '█████', '█████', '█████'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+    ],
+    'POW': [
+        ['█████', '    █', '█████', '    █', '█████'],
+        ['█   █', '   █ ', '█████', '   █ ', '█   █'],
+        ['█████', '  █  ', ' ███ ', '  █  ', '█████'],
+        ['    █', ' █   ', '█████', ' █   ', '    █'],
+        ['█████', '█    ', '█████', '█    ', '█████'],
+    ],
+    'WHAM': [
+        ['█████', '█   █', '█████', '█   █', '█   █'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+        ['█████', '█████', '█████', '█████', '█████'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+        ['█   █', '█   █', '█   █', '█   █', '█   █'],
+    ],
+    'CRASH': [
+        ['█████', '█  ██', '█████', '█  ██', '█   █'],
+        ['█   █', '█ █ █', '█   █', '██  █', '█   █'],
+        ['█████', '██  █', '█████', '█ █ █', '█   █'],
+        ['    █', '█   █', '█   █', '█  ██', '█   █'],
+        ['█████', '█   █', '█████', '█   █', '█████'],
+    ],
+    'ZAP': [
+        ['█████', '    █', '█████', '█   █', '█████'],
+        ['█   █', '   █ ', '█████', '██  █', '█   █'],
+        ['█████', '  █  ', ' ███ ', '█ █ █', '█████'],
+        ['    █', ' █   ', '█████', '█  ██', '    █'],
+        ['█████', '█    ', '█████', '█   █', '█████'],
+    ],
+}
+
+
+@mcp.tool()
+def create_action_effect(
+    effect_text: Literal['BANG', 'BOOM', 'POW', 'WHAM', 'CRASH', 'ZAP', 'CUSTOM'] = 'BANG',
+    size: Literal['small', 'medium', 'large', 'huge'] = 'large',
+    style: Literal['bold', 'outlined', 'filled'] = 'bold',
+    custom_text: str = ""
+) -> str:
+    """
+    Create comic-style action effect text.
+
+    Args:
+        effect_text: Predefined effect word or CUSTOM
+        size: Size of the effect (small, medium, large, huge)
+        style: Effect style (bold=█, outlined=█ with spacing, filled=full block)
+        custom_text: Custom text to display (when effect_text='CUSTOM')
+
+    Returns:
+        ASCII action effect as multi-line string
+
+    Example:
+        create_action_effect(effect_text='BANG', size='large', style='bold')
+    """
+
+    if effect_text == 'CUSTOM':
+        text = custom_text.upper() if custom_text else "ZAP"
+    else:
+        text = effect_text
+
+    size_multipliers = {
+        'small': 1,
+        'medium': 1,
+        'large': 2,
+        'huge': 3
+    }
+
+    multiplier = size_multipliers.get(size, 1)
+
+    if style == 'filled':
+        return _render_filled_effect(text, multiplier)
+    elif style == 'outlined':
+        return _render_outlined_effect(text, multiplier)
+    else:
+        return _render_bold_effect(text, multiplier)
+
+
+def _render_bold_effect(text: str, multiplier: int) -> str:
+    """Render bold block letter effect"""
+    patterns = []
+
+    for char in text:
+        if char in ACTION_EFFECTS:
+            patterns.append(ACTION_EFFECTS[char])
+        else:
+            patterns.append(BANNER_FONTS['block'].get(char, BANNER_FONTS['block'][' ']))
+
+    if not patterns:
+        return text
+
+    result_lines = []
+    num_lines = len(patterns[0])
+
+    for line_idx in range(num_lines):
+        line = ''
+        for pattern in patterns:
+            if line_idx < len(pattern):
+                scaled_line = _scale_line(pattern[line_idx], multiplier)
+                line += scaled_line + '  '
+        result_lines.append(line.rstrip())
+
+    return '\n'.join(result_lines)
+
+
+def _render_outlined_effect(text: str, multiplier: int) -> str:
+    """Render outlined effect"""
+    patterns = []
+
+    for char in text:
+        if char in ACTION_EFFECTS:
+            patterns.append(ACTION_EFFECTS[char])
+        else:
+            patterns.append(BANNER_FONTS['block'].get(char, BANNER_FONTS['block'][' ']))
+
+    if not patterns:
+        return text
+
+    result_lines = []
+    num_lines = len(patterns[0])
+
+    for line_idx in range(num_lines):
+        line = ''
+        for pattern in patterns:
+            if line_idx < len(pattern):
+                scaled = _scale_line(pattern[line_idx], multiplier)
+                outlined = _make_outlined(scaled)
+                line += outlined + '  '
+        result_lines.append(line.rstrip())
+
+    return '\n'.join(result_lines)
+
+
+def _render_filled_effect(text: str, multiplier: int) -> str:
+    """Render fully filled effect (no internal spaces)"""
+    patterns = []
+
+    for char in text:
+        if char in ACTION_EFFECTS:
+            patterns.append(ACTION_EFFECTS[char])
+        else:
+            patterns.append(BANNER_FONTS['block'].get(char, BANNER_FONTS['block'][' ']))
+
+    if not patterns:
+        return text
+
+    result_lines = []
+    num_lines = len(patterns[0])
+
+    for line_idx in range(num_lines):
+        line = ''
+        for pattern in patterns:
+            if line_idx < len(pattern):
+                filled = _fill_line(pattern[line_idx], multiplier)
+                line += filled + '  '
+        result_lines.append(line.rstrip())
+
+    return '\n'.join(result_lines)
+
+
+def _scale_line(line: str, multiplier: int) -> str:
+    """Scale a line horizontally"""
+    result = ''
+    for char in line:
+        result += char * multiplier
+    return result
+
+
+def _make_outlined(line: str) -> str:
+    """Convert solid line to outlined version"""
+    result = ''
+    for char in line:
+        if char == ' ':
+            result += ' '
+        else:
+            result += '█'
+    return result
+
+
+def _fill_line(line: str, multiplier: int) -> str:
+    """Fill all non-space characters"""
+    result = ''
+    for char in line:
+        if char == ' ':
+            result += ' ' * multiplier
+        else:
+            result += '█' * multiplier
+    return result
+
+
+@mcp.tool()
+def create_comic_panel(
+    title: str = "",
+    top_text: str = "",
+    bottom_text: str = "",
+    panel_count: int = 1
+) -> str:
+    """
+    Create a comic panel frame with optional title and text areas.
+
+    Args:
+        title: Optional title at top of panel
+        top_text: Text in upper area of panel
+        bottom_text: Text in lower area of panel
+        panel_count: Number of panels to create (1-3)
+
+    Returns:
+        ASCII comic panel as multi-line string
+
+    Example:
+        create_comic_panel(title="EPISODE 1", top_text="Meanwhile...",
+                         bottom_text="To be continued...")
+    """
+
+    width = 60
+    chars = UNICODE_SETS['heavy']
+
+    lines = []
+
+    top_border = chars['top_left'] + chars['horizontal'] * (width - 2) + chars['top_right']
+    lines.append(top_border)
+
+    if title:
+        title_line = f"│{title.center(width - 4)}│"
+        lines.append(title_line)
+        sep = chars['t_right'] + chars['horizontal'] * (width - 2) + chars['t_left']
+        lines.append(sep)
+
+    if top_text:
+        for text_line in top_text.split('\n'):
+            padded = text_line.center(width - 4)
+            lines.append(f"│{padded}│")
+
+    mid_line = chars['cross'] + chars['horizontal'] * (width - 2) + chars['cross']
+    lines.append(mid_line)
+
+    if bottom_text:
+        for text_line in bottom_text.split('\n'):
+            padded = text_line.center(width - 4)
+            lines.append(f"│{padded}│")
+
+    bottom_border = chars['bottom_left'] + chars['horizontal'] * (width - 2) + chars['bottom_right']
+    lines.append(bottom_border)
+
+    return '\n'.join(lines)
+
+
+@mcp.tool()
+def draw_shape(
+    shape_type: Literal['circle', 'oval', 'rectangle', 'star', 'arrow', 'cloud'],
+    width: int = 20,
+    height: int = 10,
+    fill_char: str = '█',
+    border_char: str = '─'
+) -> str:
+    """
+    Draw a generic shape that can be used in compositions.
+
+    Args:
+        shape_type: Type of shape to draw
+        width: Width of shape in characters
+        height: Height of shape in characters
+        fill_char: Character to use for filling
+        border_char: Character to use for borders
+
+    Returns:
+        Shape as multi-line ASCII art
+
+    Example:
+        draw_shape(shape_type='cloud', width=30, height=5)
+    """
+
+    if shape_type == 'circle' or shape_type == 'oval':
+        return _draw_ellipse(width, height, fill_char, border_char)
+    elif shape_type == 'rectangle':
+        return _draw_rectangle(width, height, fill_char, border_char)
+    elif shape_type == 'star':
+        return _draw_star(width, height, fill_char)
+    elif shape_type == 'arrow':
+        return _draw_arrow(width, height, fill_char)
+    elif shape_type == 'cloud':
+        return _draw_cloud(width, height, fill_char, border_char)
+    else:
+        return _draw_rectangle(width, height, fill_char, border_char)
+
+
+def _draw_ellipse(width: int, height: int, fill: str, border: str) -> str:
+    """Draw an ellipse shape"""
+    lines = []
+    center_x = width / 2
+    center_y = height / 2
+    radius_x = width / 2 - 1
+    radius_y = height / 2 - 1
+
+    for y in range(height):
+        line = ''
+        for x in range(width):
+            dx = (x - center_x) / (radius_x if radius_x > 0 else 1)
+            dy = (y - center_y) / (radius_y if radius_y > 0 else 1)
+            dist = dx * dx + dy * dy
+            if dist < 0.9:
+                line += fill
+            elif dist < 1.1:
+                line += border
+            else:
+                line += ' '
+        lines.append(line)
+    return '\n'.join(lines)
+
+
+def _draw_rectangle(width: int, height: int, fill: str, border: str) -> str:
+    """Draw a rectangle shape"""
+    lines = []
+    lines.append(border * width)
+    for y in range(height - 2):
+        lines.append(border + fill * (width - 2) + border)
+    lines.append(border * width)
+    return '\n'.join(lines)
+
+
+def _draw_star(width: int, height: int, fill: str) -> str:
+    """Draw a star shape"""
+    lines = []
+    center = width // 2
+    for y in range(height):
+        line = ' ' * width
+        if y < height // 3:
+            line_list = list(line)
+            line_list[center] = fill
+            if center - 1 >= 0:
+                line_list[center - 1] = fill
+            if center + 1 < width:
+                line_list[center + 1] = fill
+            line = ''.join(line_list)
+        elif y < height * 2 // 3:
+            line = fill * width
+        else:
+            line_list = list(line)
+            line_list[center] = fill
+            line = ''.join(line_list)
+        lines.append(line)
+    return '\n'.join(lines)
+
+
+def _draw_arrow(width: int, height: int, fill: str) -> str:
+    """Draw an arrow shape (for motion/direction)"""
+    lines = []
+    for y in range(height):
+        line = ' ' * width
+        if y == height // 2:
+            line = fill * width
+        elif y < height // 2:
+            line_list = list(line)
+            pos = width - 1 - (height // 2 - y)
+            if 0 <= pos < width:
+                line_list[pos] = fill
+            line = ''.join(line_list)
+        else:
+            line_list = list(line)
+            pos = width - 1 - (y - height // 2)
+            if 0 <= pos < width:
+                line_list[pos] = fill
+            line = ''.join(line_list)
+        lines.append(line)
+    return '\n'.join(lines)
+
+
+def _draw_cloud(width: int, height: int, fill: str, border: str) -> str:
+    """Draw a cloud shape (generic, customizable)"""
+    lines = []
+    for y in range(height):
+        line = ''
+        for x in range(width):
+            y_center = height / 2
+            x_center1 = width / 4
+            x_center2 = width / 2
+            x_center3 = width * 3 / 4
+            
+            dx1 = (x - x_center1) / (width / 4)
+            dy1 = (y - y_center) / (height / 2)
+            dist1 = dx1 * dx1 + dy1 * dy1
+            
+            dx2 = (x - x_center2) / (width / 3)
+            dy2 = (y - y_center) / (height / 3)
+            dist2 = dx2 * dx2 + dy2 * dy2
+            
+            dx3 = (x - x_center3) / (width / 4)
+            dy3 = (y - y_center) / (height / 2)
+            dist3 = dx3 * dx3 + dy3 * dy3
+            
+            if dist1 < 0.8 or dist2 < 0.7 or dist3 < 0.8:
+                line += fill
+            elif dist1 < 1.0 or dist2 < 0.9 or dist3 < 1.0:
+                line += border
+            else:
+                line += ' '
+        lines.append(line)
+    return '\n'.join(lines)
+
+
+@mcp.tool()
+def compose_elements(
+    elements: List[str],
+    layout: Literal['vertical', 'horizontal', 'overlap'] = 'vertical',
+    spacing: int = 1
+) -> str:
+    """
+    Compose multiple ASCII art elements together.
+
+    Args:
+        elements: List of ASCII art strings to compose
+        layout: How to arrange the elements
+        spacing: Number of empty lines between elements
+
+    Returns:
+        Composed ASCII art as multi-line string
+
+    Example:
+        compose_elements([cloud1, car, speech_bubble], layout='vertical')
+    """
+
+    if layout == 'vertical':
+        result = []
+        for i, element in enumerate(elements):
+            element_lines = element.split('\n')
+            result.extend(element_lines)
+            if i < len(elements) - 1:
+                result.extend([''] * spacing)
+        return '\n'.join(result)
+
+    elif layout == 'horizontal':
+        element_lines_list = [e.split('\n') for e in elements]
+        max_height = max(len(lines) for lines in element_lines_list)
+        result = []
+        for y in range(max_height):
+            line = ''
+            for i, lines in enumerate(element_lines_list):
+                if y < len(lines):
+                    line += lines[y]
+                else:
+                    line += ' ' * (len(lines[0]) if lines else 0)
+                if i < len(elements) - 1:
+                    line += ' ' * spacing
+            result.append(line)
+        return '\n'.join(result)
+
+    else:
+        return elements[0] if elements else ''
+
+
+@mcp.tool()
+def add_effect(
+    ascii_art: str,
+    effect_type: Literal['motion_lines', 'sparkles', 'skid_marks', 'shadow'],
+    position: Literal['top', 'bottom', 'left', 'right'] = 'bottom',
+    intensity: int = 3
+) -> str:
+    """
+    Add visual effects to existing ASCII art.
+
+    Args:
+        ascii_art: The ASCII art to modify
+        effect_type: Type of effect to add
+        position: Where to place the effect
+        intensity: Intensity of the effect (1-5)
+
+    Returns:
+        Modified ASCII art with effects
+
+    Example:
+        add_effect(car_art, effect_type='motion_lines', position='left', intensity=4)
+    """
+
+    lines = ascii_art.split('\n')
+    if not lines:
+        return ascii_art
+
+    width = max(len(line) for line in lines)
+    result = lines.copy()
+
+    if effect_type == 'motion_lines':
+        if position == 'left':
+            for y in range(len(result)):
+                line = result[y]
+                prefix = '~' * intensity if y % 2 == 0 else '-' * intensity
+                result[y] = prefix + line
+        elif position == 'right':
+            for y in range(len(result)):
+                line = result[y]
+                suffix = '~' * intensity if y % 2 == 0 else '-' * intensity
+                result[y] = line + suffix
+
+    elif effect_type == 'skid_marks':
+        skid_line = '  ' * intensity + '─' * (width // 2) + '  ' * intensity
+        for _ in range(intensity):
+            result.append(skid_line)
+
+    elif effect_type == 'sparkles':
+        for y in range(len(result)):
+            if y % 3 == 0:
+                line_list = list(result[y].ljust(width))
+                for x in range(0, width, 4):
+                    if x < len(line_list):
+                        line_list[x] = '*' if line_list[x] == ' ' else line_list[x]
+                result[y] = ''.join(line_list)
+
+    return '\n'.join(result)
+
+
+# ============================================================================
+# Run Server
+# ============================================================================
+
+if __name__ == "__main__":
+    mcp.run()

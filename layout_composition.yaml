@@ -1,0 +1,103 @@
+name: layout_composition
+description: Spatial composition and arrangement patterns
+
+objects:
+  - CanvasSize:
+      description: Overall dimensions of the ASCII art
+      width: 20-120  # character columns
+      height: 5-50   # character rows
+      aspect_ratio: [square, landscape, portrait, custom]
+      intentionality: Size determines viewing distance and detail level
+
+  - AlignmentStrategy:
+      description: How content aligns within canvas
+      horizontal: [left, center, right]
+      vertical: [top, middle, bottom]
+      intentionality: Alignment creates visual stability and emphasis
+
+  - PaddingScheme:
+      description: Internal spacing and breathing room
+      padding_top: 0-10
+      padding_bottom: 0-10
+      padding_left: 0-10
+      padding_right: 0-10
+      intentionality: Padding affects visual weight and importance
+
+  - LayoutPattern:
+      description: Structural organization of elements
+      pattern_type: [single_box, nested_boxes, grid, tree, flowing]
+      intentionality: Pattern determines information hierarchy
+
+morphisms:
+  # CanvasSize → dimensions
+  - source: CanvasSize
+    target: Dimensions
+    transformation:
+      aspect_ratio → width_height_relationship
+      square → width = height
+      landscape → width = height * 1.5
+      portrait → width = height * 0.67
+    preservation: aspect ratio determines proportions
+
+  # AlignmentStrategy → coordinate_offset
+  - source: AlignmentStrategy
+    target: CoordinateOffset
+    transformation:
+      horizontal_left → offset_x = 0
+      horizontal_center → offset_x = (canvas_width - content_width) / 2
+      horizontal_right → offset_x = canvas_width - content_width
+      vertical_top → offset_y = 0
+      vertical_middle → offset_y = (canvas_height - content_height) / 2
+      vertical_bottom → offset_y = canvas_height - content_height
+    preservation: alignment maps to spatial coordinates
+
+  # LayoutPattern → structure_template
+  - source: LayoutPattern
+    target: StructureTemplate
+    transformation:
+      single_box → one_bordered_region
+      nested_boxes → recursive_borders
+      grid → regular_cell_division
+      tree → hierarchical_branching
+      flowing → organic_arrangement
+    preservation: pattern determines spatial organization
+
+anchor_mappings:
+  aspect_ratio:
+    - square: {width: 40, height: 40, ratio: 1.0}
+    - landscape: {width: 60, height: 40, ratio: 1.5}
+    - portrait: {width: 40, height: 60, ratio: 0.67}
+    - wide: {width: 80, height: 30, ratio: 2.67}
+    - tall: {width: 30, height: 80, ratio: 0.375}
+
+  horizontal:
+    - left: {offset_x: 0, anchor: start}
+    - center: {offset_x: "calc", anchor: middle}
+    - right: {offset_x: "calc", anchor: end}
+
+  vertical:
+    - top: {offset_y: 0, anchor: start}
+    - middle: {offset_y: "calc", anchor: middle}
+    - bottom: {offset_y: "calc", anchor: end}
+
+  pattern_type:
+    - single_box:
+        structure: simple
+        borders: 1
+        nesting: 0
+    - nested_boxes:
+        structure: recursive
+        borders: "multiple"
+        nesting: 2-5
+    - grid:
+        structure: regular
+        divisions: "rows × cols"
+        cells: true
+    - tree:
+        structure: hierarchical
+        branching: true
+        levels: 3-7
+    - flowing:
+        structure: organic
+        fixed_positions: false
+        adaptive: true

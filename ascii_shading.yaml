@@ -1,0 +1,95 @@
+name: ascii_shading
+description: Character-based shading and gradient systems
+
+objects:
+  - ShadingPalette:
+      description: Character sequences representing light to dark
+      palette_type: [ascii_standard, blocks, dots, density, braille]
+      intentionality: Different palettes create different textural qualities
+
+  - ContrastLevel:
+      description: Visual contrast between light and dark areas
+      contrast: 0.0-1.0  # low to high
+      gamma: 0.5-2.0  # shadow/highlight balance
+      intentionality: Contrast affects legibility and dramatic effect
+
+  - GradientDirection:
+      description: Direction of shading transition
+      direction: [horizontal, vertical, radial, diagonal_tl_br, diagonal_tr_bl]
+      intentionality: Direction guides eye movement and creates depth
+
+  - DitherPattern:
+      description: Pattern for intermediate tones
+      dither_type: [none, ordered, random, floyd_steinberg]
+      intentionality: Dithering creates smoother gradients vs banding
+
+morphisms:
+  # ShadingPalette → character_sequence
+  - source: ShadingPalette
+    target: CharacterSequence
+    transformation:
+      ascii_standard → " .:-=+*#%@"
+      blocks → " ░▒▓█"
+      dots → " ·∘○●◉"
+      density → " .,;!lI$"
+      braille → unicode_braille_patterns
+    preservation: palette maps to ordered character lightness
+
+  # ContrastLevel → palette_sampling
+  - source: ContrastLevel
+    target: PaletteSampling
+    transformation:
+      low_contrast → use_middle_range_only
+      high_contrast → use_full_range
+    preservation: contrast determines character selection range
+
+  # GradientDirection → coordinate_transformation
+  - source: GradientDirection
+    target: CoordinateTransform
+    transformation:
+      horizontal → f(x, y) = x / width
+      vertical → f(x, y) = y / height
+      radial → f(x, y) = distance_from_center
+      diagonal_tl_br → f(x, y) = (x + y) / (width + height)
+    preservation: direction maps to spatial function
+
+anchor_mappings:
+  palette_type:
+    - ascii_standard:
+        chars: " .:-=+*#%@"
+        levels: 10
+        texture: grainy
+    - blocks:
+        chars: " ░▒▓█"
+        levels: 5
+        texture: smooth
+    - dots:
+        chars: " ·∘○●◉"
+        levels: 6
+        texture: dotted
+    - density:
+        chars: " .,;!lI$@"
+        levels: 9
+        texture: dense
+    - braille:
+        chars: "⠀⠁⠃⠇⠏⠟⠿⣿"
+        levels: 8
+        texture: fine
+
+  contrast:
+    - low: {min_idx: 2, max_idx: 7, gamma: 1.0}
+    - medium: {min_idx: 1, max_idx: 9, gamma: 1.2}
+    - high: {min_idx: 0, max_idx: 10, gamma: 1.5}
+
+  direction:
+    - horizontal: {axis: x, formula: "x / width"}
+    - vertical: {axis: y, formula: "y / height"}
+    - radial: {center: true, formula: "sqrt((dx)^2 + (dy)^2)"}
+    - diagonal_tl_br: {formula: "(x + y) / (width + height)"}
+    - diagonal_tr_bl: {formula: "(width - x + y) / (width + height)"}
+
+  dither_type:
+    - none: {method: nearest, quality: banding}
+    - ordered: {method: bayer_matrix, quality: patterned}
+    - random: {method: noise, quality: grainy}
+    - floyd_steinberg: {method: error_diffusion, quality: smooth}
