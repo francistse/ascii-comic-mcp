@@ -323,6 +323,15 @@ MIT License
 
 欢迎贡献！请随时提交 Pull Request。
 
+## 📞 联系方式
+
+**项目维护者：** Francis Tse
+
+- **邮箱:** francis.tse.mc@gmail.com
+- **领英:** [https://www.linkedin.com/in/francis-tse-6a399a47/](https://www.linkedin.com/in/francis-tse-6a399a47/)
+
+如有问题、建议或合作机会，欢迎随时联系。
+
 ## 链接
 
 - [GitHub 仓库](https://github.com/francistse/ascii-comic-mcp)

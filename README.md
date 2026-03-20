@@ -323,6 +323,15 @@ This project is inspired by and references the codebase from [dmarsters/ascii-ar
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
+## 📞 Contact Information
+
+**Project Maintainer:** Francis Tse
+
+- **Email:** francis.tse.mc@gmail.com
+- **LinkedIn:** [https://www.linkedin.com/in/francis-tse-6a399a47/](https://www.linkedin.com/in/francis-tse-6a399a47/)
+
+For questions, suggestions, or collaboration opportunities, feel free to reach out.
+
 ## Links
 
 - [GitHub Repository](https://github.com/francistse/ascii-comic-mcp)
