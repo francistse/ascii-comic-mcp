@@ -1,37 +1,37 @@
 # ASCII Comic MCP Server
 
-A FastMCP server for generating comic-style ASCII art with speech bubbles, bold banners, action effects, and more.
+一个用于生成漫画风格 ASCII 艺术的 FastMCP 服务器，支持对话气泡、粗体横幅、动作特效等。
 
-> 🎨 This project was developed with [TRAE IDE](https://trae.ai) - making MCP development easier and more enjoyable.
+> 🎨 本项目使用 [TRAE IDE](https://trae.ai) 开发 - 让 MCP 开发变得更加简单愉快。
 
-**Language / 语言:** [English](README.md) | [简体中文](README.zh_CN.md)
+**语言 / 语言:** [English](README.md) | [简体中文](README.zh_CN.md)
 
-## Features
+## 功能特性
 
-- **Speech Bubbles**: Create comic-style speech bubbles with various shapes (oval, rectangular, cloud, thought)
-- **Bold Banners**: Generate stylized multi-line text banners with emphasis effects
-- **Action Effects**: Create comic action words like BANG, BOOM, POW, WHAM, CRASH, ZAP
-- **ASCII Boxes**: Create bordered boxes with gradient shading
-- **Data Tables**: Generate ASCII tables with headers and rows
-- **Shapes**: Draw circles, rectangles, stars, arrows, and clouds
-- **Composition**: Combine multiple ASCII art elements together
-- **Visual Effects**: Add motion lines, sparkles, skid marks, and shadows
+- **对话气泡**: 创建各种形状的漫画风格对话气泡（椭圆形、矩形、云朵形、思想形）
+- **粗体横幅**: 生成带有强调效果的多行风格化文本横幅
+- **动作特效**: 创建漫画动作词如 BANG、BOOM、POW、WHAM、CRASH、ZAP
+- **ASCII 方框**: 创建带边框和渐变阴影的方框
+- **数据表格**: 生成带标题和行的 ASCII 表格
+- **形状绘制**: 绘制圆形、矩形、星星、箭头、云朵
+- **元素组合**: 将多个 ASCII 艺术元素组合在一起
+- **视觉效果**: 添加运动线、火花、刹车痕、阴影等效果
 
-## Installation
+## 安装
 
-### Using pip
+### 使用 pip
 
 ```bash
 pip install ascii-comic-mcp
 ```
 
-### Using FastMCP CLI
+### 使用 FastMCP CLI
 
 ```bash
 fastmcp install server.py
 ```
 
-### From Source
+### 从源代码安装
 
 ```bash
 git clone https://github.com/francistse/ascii-comic-mcp.git
@@ -39,39 +39,24 @@ cd ascii-comic-mcp
 pip install -e .
 ```
 
-## Usage
+## 使用方法
 
-### Running the Server
+### 运行服务器
 
 ```bash
-# Using FastMCP CLI
+# 使用 FastMCP CLI
 fastmcp run server.py
 
-# Or directly with Python
+# 或直接用 Python 运行
 python server.py
 
-# Development mode with inspector
+# 开发模式（带检查器）
 fastmcp dev server.py inspector
 ```
 
-### Integration with Claude Desktop
+### 与 Claude Desktop 集成
 
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
-
-```json
-{
-  "mcpServers": {
-    "ascii-comic": {
-      "command": "fastmcp",
-      "args": ["run", "/path/to/ascii-comic-mcp/server.py"]
-    }
-  }
-}
-```
-
-### Integration with TRAE
-
-Add to your TRAE MCP configuration:
+添加到 Claude Desktop 配置文件（macOS 路径：`~/Library/Application Support/Claude/claude_desktop_config.json`）：
 
 ```json
 {
@@ -84,17 +69,32 @@ Add to your TRAE MCP configuration:
 }
 ```
 
-## Available Tools
+### 与 TRAE 集成
+
+添加到 TRAE MCP 配置文件：
+
+```json
+{
+  "mcpServers": {
+    "ascii-comic": {
+      "command": "fastmcp",
+      "args": ["run", "/path/to/ascii-comic-mcp/server.py"]
+    }
+  }
+}
+```
+
+## 可用工具
 
 ### `create_ascii_box`
 
-Create ASCII art boxes with borders and optional shading.
+创建带边框和可选阴影的 ASCII 艺术方框。
 
 ```python
 create_ascii_box(
     width=50,
     height=15,
-    title="Status",
+    title="状态",
     line_style='double',
     shading_palette='blocks',
     shading_direction='radial',
@@ -104,15 +104,15 @@ create_ascii_box(
 
 ### `create_ascii_table`
 
-Create ASCII tables with headers and data rows.
+创建带标题和数据行的 ASCII 表格。
 
 ```python
 create_ascii_table(
-    headers=["Name", "Status", "Progress"],
+    headers=["名称", "状态", "进度"],
     rows=[
-        ["Task 1", "Complete", "100%"],
-        ["Task 2", "Running", "65%"],
-        ["Task 3", "Pending", "0%"]
+        ["任务 1", "完成", "100%"],
+        ["任务 2", "运行中", "65%"],
+        ["任务 3", "待处理", "0%"]
     ],
     line_style='double'
 )
@@ -120,11 +120,11 @@ create_ascii_table(
 
 ### `create_speech_bubble`
 
-Create comic-style speech bubbles.
+创建漫画风格的对话气泡。
 
 ```python
 create_speech_bubble(
-    text="HELLO WORLD!",
+    text="你好世界！",
     bubble_style='oval',
     tail_position='bottom-left',
     line_style='rounded'
@@ -133,11 +133,11 @@ create_speech_bubble(
 
 ### `create_comic_banner`
 
-Create bold, stylized text banners.
+创建粗体风格化文本横幅。
 
 ```python
 create_comic_banner(
-    text="HELLO WORLD!!!",
+    text="你好世界！！！",
     font_style='block',
     emphasis='stars'
 )
@@ -145,7 +145,7 @@ create_comic_banner(
 
 ### `create_action_effect`
 
-Create comic action effects.
+创建漫画动作特效。
 
 ```python
 create_action_effect(
@@ -157,7 +157,7 @@ create_action_effect(
 
 ### `draw_shape`
 
-Draw various shapes.
+绘制各种形状。
 
 ```python
 draw_shape(
@@ -171,7 +171,7 @@ draw_shape(
 
 ### `compose_elements`
 
-Compose multiple ASCII art elements together.
+组合多个 ASCII 艺术元素。
 
 ```python
 compose_elements(
@@ -183,7 +183,7 @@ compose_elements(
 
 ### `add_effect`
 
-Add visual effects to existing ASCII art.
+为现有 ASCII 艺术添加视觉效果。
 
 ```python
 add_effect(
@@ -196,38 +196,38 @@ add_effect(
 
 ### `create_comic_panel`
 
-Create comic panel frames.
+创建漫画面板框架。
 
 ```python
 create_comic_panel(
-    title="EPISODE 1",
-    top_text="Meanwhile...",
-    bottom_text="To be continued..."
+    title="第 1 集",
+    top_text="与此同时...",
+    bottom_text="未完待续..."
 )
 ```
 
 ### `list_ascii_styles`
 
-List all available ASCII art styles with their visual properties.
+列出所有可用的 ASCII 艺术风格及其视觉属性。
 
-## Style Options
+## 风格选项
 
-### Line Styles
-- `light`: Clean, minimal, professional
-- `heavy`: Bold, emphatic
-- `double`: Formal, structured
-- `rounded`: Friendly, approachable
+### 线条风格
+- `light`: 简洁、极简、专业
+- `heavy`: 粗体、醒目
+- `double`: 正式、结构化
+- `rounded`: 友好、亲切
 
-### Shading Palettes
-- `ascii_standard`: Classic ASCII art - universally compatible
-- `blocks`: Smooth gradients - modern terminal aesthetics
-- `dots`: Geometric precision - technical diagrams
-- `density`: High detail - complex shading
-- `braille`: Ultra-fine detail - maximum resolution
+### 阴影调色板
+- `ascii_standard`: 经典 ASCII 艺术 - 通用兼容
+- `blocks`: 平滑渐变 - 现代终端美学
+- `dots`: 几何精度 - 技术图表
+- `density`: 高细节 - 复杂阴影
+- `braille`: 超精细 - 最高分辨率
 
-## Examples
+## 示例
 
-### Circle Shape
+### 圆形
 
 ```
                               
@@ -247,7 +247,7 @@ List all available ASCII art styles with their visual properties.
            ●●●●●●●●●          
 ```
 
-### Speech Bubble
+### 对话气泡
 
 ```
 ╭──────────────────╮
@@ -257,7 +257,7 @@ List all available ASCII art styles with their visual properties.
     \
 ```
 
-### Action Effect
+### 动作特效
 
 ```
 █████   █████  █████  █████
@@ -267,13 +267,13 @@ List all available ASCII art styles with their visual properties.
 █████   █████  █   █  █████
 ```
 
-### Progress Bar
+### 进度条
 
 ```
 [████████████░░░░░░░░░░░░] 50%
 ```
 
-### Banner with Stars
+### 带星星的横幅
 
 ```
 ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★
@@ -285,7 +285,7 @@ List all available ASCII art styles with their visual properties.
 ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★
 ```
 
-### Thank You Banner
+### 感谢横幅
 
 ```
 ┌───────────────────────────────────────────────────────────────────────────────┐
@@ -301,30 +301,30 @@ List all available ASCII art styles with their visual properties.
 └───────────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Requirements
+## 系统要求
 
 - Python >= 3.10
 - fastmcp >= 0.1.0
 
-## License
+## 许可证
 
 MIT License
 
-## Acknowledgments
+## 致谢
 
-This project is inspired by and references the codebase from [dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp). Special thanks to the original author for the excellent implementation of the Lushy Pattern 2 architecture and categorical composition system.
+本项目的灵感来源于 [dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp) 的代码库。特别感谢原作者出色的 Lushy Pattern 2 架构和分类组合系统实现。
 
-### Special Thanks
+### 特别感谢
 
-- **[dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp)** - The original ASCII Art MCP Server that inspired this comic-focused variant
-- **[TRAE IDE](https://trae.ai)** - This project was built entirely with TRAE IDE, which made the development process smooth and efficient
+- **[dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp)** - 原始 ASCII艺术MCP服务器，为本项目提供了灵感
+- **[TRAE IDE](https://trae.ai)** - 本项目完全使用 TRAE IDE 构建，使开发过程更加顺畅高效
 
-## Contributing
+## 贡献
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+欢迎贡献！请随时提交 Pull Request。
 
-## Links
+## 链接
 
-- [GitHub Repository](https://github.com/francistse/ascii-comic-mcp)
-- [FastMCP Documentation](https://gofastmcp.com)
-- [Model Context Protocol](https://modelcontextprotocol.io)
+- [GitHub 仓库](https://github.com/francistse/ascii-comic-mcp)
+- [FastMCP 文档](https://gofastmcp.com)
+- [模型上下文协议](https://modelcontextprotocol.io)
