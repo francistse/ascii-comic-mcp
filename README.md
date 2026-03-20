@@ -2,6 +2,8 @@
 
 A FastMCP server for generating comic-style ASCII art with speech bubbles, bold banners, action effects, and more.
 
+> 🎨 This project was developed with [TRAE IDE](https://trae.ai) - making MCP development easier and more enjoyable.
+
 ## Features
 
 - **Speech Bubbles**: Create comic-style speech bubbles with various shapes (oval, rectangular, cloud, thought)
@@ -263,6 +265,15 @@ List all available ASCII art styles with their visual properties.
 ## License
 
 MIT License
+
+## Acknowledgments
+
+This project is inspired by and references the codebase from [dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp). Special thanks to the original author for the excellent implementation of the Lushy Pattern 2 architecture and categorical composition system.
+
+### Special Thanks
+
+- **[dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp)** - The original ASCII Art MCP Server that inspired this comic-focused variant
+- **[TRAE IDE](https://trae.ai)** - This project was built entirely with TRAE IDE, which made the development process smooth and efficient
 
 ## Contributing
 
