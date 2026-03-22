@@ -1732,8 +1732,8 @@ class ASCIIModeManager:
             # Only text content gets wrapped at 38 chars; banners may be truncated
 
             art_chars = set('░▒▓█★╭╮╰╯─│┌┐└┘★•○●◉')
-            max_text_width = 48
-            max_box_width = 50
+            max_text_width = 38
+            max_box_width = 40
 
             def is_decorative_line(line):
                 if not line:

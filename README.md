@@ -212,7 +212,7 @@ List all available ASCII art styles with their visual properties.
 
 ## ASCII Mode
 
-ASCII Mode is a toggleable feature that transforms AI assistant responses into ASCII art-enriched format. When activated, all responses pass through a transformation pipeline.
+ASCII Mode is a toggleable feature that transforms AI assistant responses into ASCII art-enriched format. When activated, all responses pass through a transformation pipeline with a **40-character maximum width** per line.
 
 ### Activation
 
@@ -240,7 +240,7 @@ ascii_config_set(key='style', value='heavy')  # Box line style
 
 | Feature | Description |
 |---------|-------------|
-| **A) Box Wrapping** | Wrap responses in bordered ASCII boxes |
+| **A) Box Wrapping** | Wrap responses in bordered ASCII boxes (max 40 chars) |
 | **B) Banner Text** | Transform key phrases into block letters |
 | **C) ASCII Art** | Add complementary ASCII drawings |
 
@@ -266,6 +266,13 @@ ascii_config_set(key='style', value='heavy')  # Box line style
 ```python
 get_ascii_mode_status()      # Get current mode state and config
 ```
+
+### Output Format
+
+All ASCII mode responses are constrained to **40 characters maximum per line**, with:
+- Decorative banners/art may be truncated with ".." if exceeding limits
+- Text content is properly wrapped at word boundaries
+- Content is centered within the bordered box
 
 ### Interactive Dialog
 
