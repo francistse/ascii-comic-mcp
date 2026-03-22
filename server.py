@@ -1484,17 +1484,37 @@ def compose_elements(
         compose_elements([cloud1, car, speech_bubble], layout='vertical')
     """
 
+    def get_element_dims(element: str):
+        lines = element.split('\n')
+        max_width = max(len(line) for line in lines) if lines else 0
+        return lines, max_width
+
     if layout == 'vertical':
+        if not elements:
+            return ''
+
+        element_data = [get_element_dims(e) for e in elements]
+        max_width = max(width for _, width in element_data)
+
         result = []
-        for i, element in enumerate(elements):
-            element_lines = element.split('\n')
-            result.extend(element_lines)
+        for i, (lines, _) in enumerate(element_data):
+            for line in lines:
+                if len(line) < max_width:
+                    result.append(line + ' ' * (max_width - len(line)))
+                else:
+                    result.append(line)
             if i < len(elements) - 1:
                 result.extend([''] * spacing)
         return '\n'.join(result)
 
     elif layout == 'horizontal':
-        element_lines_list = [e.split('\n') for e in elements]
+        element_lines_list = []
+        element_widths = []
+        for e in elements:
+            lines, width = get_element_dims(e)
+            element_widths.append(width)
+            element_lines_list.append(lines)
+
         max_height = max(len(lines) for lines in element_lines_list)
         result = []
         for y in range(max_height):
@@ -1503,7 +1523,7 @@ def compose_elements(
                 if y < len(lines):
                     line += lines[y]
                 else:
-                    line += ' ' * (len(lines[0]) if lines else 0)
+                    line += ' ' * element_widths[i]
                 if i < len(elements) - 1:
                     line += ' ' * spacing
             result.append(line)
