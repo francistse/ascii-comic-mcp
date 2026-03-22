@@ -7,6 +7,149 @@ description: "Creates comic-style ASCII art with speech bubbles, bold banners, a
 
 This skill empowers the AI to create visual ASCII art using a **component-based approach**. Instead of pre-built scenes, you get reusable primitives, composition tools, and effect layers to build custom scenes.
 
+## Two Ways to Create ASCII Art
+
+This system provides **two distinct approaches** for creating ASCII art:
+
+### 1. **Template-Based Generation** (Quick & Recognizable)
+Use pre-built templates for common objects - perfect for immediate results.
+
+### 2. **Component-Based Composition** (Custom & Flexible)
+Build custom scenes from primitives - perfect for unique creations.
+
+---
+
+## PART 1: Template-Based Generation
+
+Use these tools when you need **instant, recognizable ASCII art** of common subjects.
+
+### `generate_ascii_art`
+
+Generate ASCII art from pre-defined templates for recognizable objects.
+
+```
+Parameters:
+- subject: Description of what to draw (e.g., 'a dog', 'a cat', 'a tree', 'a house')
+- style: Art style (default, detailed, simple) - default: 'default'
+
+Returns: ASCII art string
+```
+
+**Examples:**
+```python
+# Generate animals
+generate_ascii_art(subject='a dog')
+generate_ascii_art(subject='a cat sitting')
+generate_ascii_art(subject='a bird flying')
+generate_ascii_art(subject='a fish swimming')
+
+# Generate nature
+generate_ascii_art(subject='a tree')
+generate_ascii_art(subject='a flower')
+generate_ascii_art(subject='mountains')
+generate_ascii_art(subject='the sun')
+
+# Generate buildings & vehicles
+generate_ascii_art(subject='a house')
+generate_ascii_art(subject='a car')
+generate_ascii_art(subject='a rocket')
+
+# Generate objects
+generate_ascii_art(subject='a heart')
+generate_ascii_art(subject='a star')
+generate_ascii_art(subject='a computer')
+```
+
+### `list_ascii_art_templates`
+
+Get all available templates and their categories.
+
+```
+Returns: Dictionary with available templates organized by category
+
+Example response:
+{
+    'available_templates': ['dog', 'cat', 'bird', ...],
+    'by_category': {
+        'animals': ['dog', 'cat', 'bird', 'fish', 'person'],
+        'nature': ['tree', 'flower', 'mountain', 'sun', 'moon', 'cloud'],
+        'buildings_vehicles': ['house', 'car', 'rocket', 'boat'],
+        'objects': ['heart', 'star', 'computer', 'phone', 'book', 'cup', 'bottle']
+    },
+    'total_count': 21,
+    'example_usage': "generate_ascii_art(subject='a dog')"
+}
+```
+
+### `get_database_stats`
+
+Get statistics about the ASCII art database and available templates.
+
+```
+Returns: Dictionary with database statistics and template count
+
+Example response:
+{
+    'status': 'connected',
+    'total_ascii_art': 150,
+    'categories': [{'category': 'animals', 'count': 45}, ...],
+    'averages': {'avg_width': 50.2, 'avg_height': 25.3, 'avg_complexity': 0.65},
+    'available_templates': 21
+}
+```
+
+### Available Templates (21 Total)
+
+**Animals:**
+- `dog` - Multiple variations
+- `cat` - Classic cat face
+- `bird` - Simple bird
+- `fish` - Swimming fish
+- `person` - Stick figure
+
+**Nature:**
+- `tree` - Pine tree
+- `flower` - Simple flower
+- `mountain` - Mountain range
+- `sun` - Sun with rays
+- `moon` - Crescent moon
+- `cloud` - Fluffy cloud
+
+**Buildings & Vehicles:**
+- `house` - Simple house
+- `car` - Side view car
+- `rocket` - Space rocket
+- `boat` - Sailboat
+
+**Objects:**
+- `heart` - Heart shape
+- `star` - Star shape
+- `computer` - Desktop PC
+- `phone` - Mobile phone
+- `book` - Open book
+- `cup` - Coffee cup
+- `bottle` - Water bottle
+
+### When to Use Template-Based Generation
+
+✅ **Use when:**
+- User asks for a specific, common object ("draw a dog", "make a cat")
+- Quick results are needed
+- Recognizable objects are acceptable
+- User describes a single subject
+
+❌ **Don't use when:**
+- User wants a custom scene or composition
+- Specific artistic vision is needed
+- Multiple objects need to be combined
+- Unique positioning or styling is required
+
+---
+
+## PART 2: Component-Based Composition
+
+Use these tools when you need **custom, flexible ASCII art** built from primitives.
+
 ## When to Invoke
 
 **Invoke this skill when:**
@@ -358,3 +501,93 @@ combined = combine_ascii_arts([dog, arrow], layout='vertical', spacing=2)
   - Intricate symbols and logos
   - Artwork requiring fine detail
   - When visual quality is a priority
+
+---
+
+## ASCII Mode
+
+ASCII Mode is a toggleable feature that transforms AI assistant responses into ASCII art-enriched format. When activated, all responses pass through a transformation pipeline.
+
+### Activation
+
+```
+enter_ascii_mode()           # Enter with default settings (A+B+C)
+enter_ascii_mode(options=True)  # Force show feature selection dialog
+```
+
+### Deactivation
+
+```
+exit_ascii_mode()            # Return to normal text responses
+```
+
+### Configuration
+
+```
+ascii_config_show()          # Display current configuration
+ascii_config_set(key='features', value='box,banner,art')  # Customize features
+ascii_config_set(key='dialog', value='always')  # Dialog behavior
+ascii_config_set(key='style', value='heavy')  # Box line style
+```
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **A) Box Wrapping** | Wrap responses in bordered ASCII boxes |
+| **B) Banner Text** | Transform key phrases into block letters |
+| **C) ASCII Art** | Add complementary ASCII drawings |
+
+### Configuration Options
+
+**Features:**
+- `ascii config set features=box,banner` - Enable only box and banner
+- `ascii config set features=all` - Enable all features (default: A+B+C)
+
+**Dialog Behavior:**
+- `ascii config set dialog=always` - Show dialog every entry
+- `ascii config set dialog=first` - Show dialog only first time (default)
+- `ascii config set dialog=never` - Never show dialog
+
+**Line Styles:**
+- `ascii config set style=light` - Minimal, clean lines
+- `ascii config set style=heavy` - Bold, emphatic lines
+- `ascii config set style=double` - Formal, double lines
+- `ascii config set style=rounded` - Friendly, rounded corners (default)
+
+### Status Check
+
+```
+get_ascii_mode_status()      # Get current mode state and config
+```
+
+### Example Usage
+
+```python
+# Activate ASCII mode
+enter_ascii_mode()
+
+# Now all responses are transformed with:
+# - Bordered box wrapper
+# - Key words converted to banner text
+# - Complementary ASCII art decorations
+
+# Deactivate when done
+exit_ascii_mode()
+```
+
+### Interactive Dialog
+
+On first entry (or with `options=True`), ASCII mode shows a selection dialog:
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    ASCII MODE - Select Features                   ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [X] A) Box Wrapping    - Wrap responses in bordered box        ║
+║  [X] B) Banner Text     - Transform text to block letters       ║
+║  [X] C) ASCII Art       - Add complementary ASCII drawings     ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [S] Save & Continue (Default: A+B+C)    [C] Cancel              ║
+╚═══════════════════════════════════════════════════════════════╝
+```

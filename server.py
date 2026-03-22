@@ -14,9 +14,367 @@ from fastmcp import FastMCP
 from typing import Dict, Any, List, Optional, Literal
 from dataclasses import dataclass
 import math
+import os
+import json
+import sqlite3
+import random
+from datetime import datetime
 
 # Initialize MCP server
 mcp = FastMCP("ASCII Comic Generator")
+
+
+# ============================================================================
+# ASCII ART TEMPLATES (Standalone Generator)
+# ============================================================================
+
+ASCII_TEMPLATES = {
+    'dog': [
+"""      __      __
+     /  \\    /  \\
+    |    \\__/    |
+    |  o    o  |
+    |     <     |
+    |   \\___/   |
+     \\  \\___/  /
+      \\  ---  /
+       | | | |
+       | | | |""",
+"""  __      __
+ /  \\____/  \\
+|  __    __  |
+| |  |  |  | |
+| |  |__|  | |
+|  \\______/  /
+ \\  \\    /  /
+  \\  \\__/  /
+   | |  | |
+   |_|  |_|"""
+    ],
+    'cat': [
+"""      /\\_/\\
+     ( o.o )
+      > ^ <
+     /|   |\\
+    ( |   | )
+    | |   | |
+    |_|   |_|""",
+"""  /\\_/\\
+ ( >.< )
+ (  "  )
+ /|   |\\
+/ |   | \\
+  |   |
+  |   |"""
+    ],
+    'bird': [
+"""   __
+ _'  >
+  \\/
+   \\/\\
+    \\""",
+"""  __
+ /  \\
+|    |
+ \\__/
+  ||
+  ||
+  ||"""
+    ],
+    'fish': [
+"""      __
+   _ /  \\_
+  / /    \\ \\
+ | |      | |
+  \\ \\____/ /
+   \\______/""",
+"""   __
+ _/  \\_
+/      \\
+|  ()  |
+\\______/"""
+    ],
+    'tree': [
+"""
+    *
+   ***
+  *****
+ *******
+*********
+    |
+    |
+    |
+""",
+"""   ***
+  *****
+ *******
+*********
+    |
+    |""",
+"""    *
+   ***
+  *****
+ *******
+*********
+    |
+    |
+    |"""
+    ],
+    'house': [
+"""
+   /\\
+  /  \\
+ /____\\
+ |    |
+ |    |
+ |____|
+""",
+"""    /\\
+   /  \\
+  /____\\
+  | [] |
+  |    |
+  |____|"""
+    ],
+    'car': [
+"""      ______
+     /|_||_\\`.__
+    (   _    _\\
+    =`-(_)--(_)-'
+""",
+"""    ______
+   /|_||_\\`.__
+  (   _    _)
+  =`-(_)--(_)-'"""
+    ],
+    'flower': [
+"""    __
+ _-(  )-_
+/  \\||/  \\
+|  / || \\  |
+ \\_/  ||  \\_/
+      ||
+      ||
+""",
+"""   _-_
+  (   )
+ _/ | \\_
+|  /|\\  |
+ \\_/|\\_/
+   | |
+   | |"""
+    ],
+    'heart': [
+"""
+ __  __
+/  \\/  \\
+\\      /
+ \\    /
+  \\  /
+   \\/
+""",
+""" **   **
+**** ****
+*********
+ ********
+  *******
+   *****
+    ***
+     *"""
+    ],
+    'star': [
+"""    *
+   ***
+  *****
+*******
+ *****
+  ***
+   *""",
+"""  *
+ * *
+*****
+ * *
+  *"""
+    ],
+    'sun': [
+"""      _
+   _ ( ) _
+  (  ___  )
+   (_____)
+      |""",
+"""   \\ | /
+ -  *  -
+   / | \\"""
+    ],
+    'moon': [
+"""   _
+ _' >
+/ /
+\\ \\
+ \\_\\
+""",
+"""   __
+ _'  >
+/  /
+\\  \\
+ \\__\\"""
+    ],
+    'person': [
+"""   O
+  /|\\
+  / \\""",
+"""  _O_
+   |
+  / \\""",
+"""   ___
+  /   \\
+  | O |
+  \\___/
+    |
+   / \\
+  /   \\"""
+    ],
+    'mountain': [
+"""    /\\
+   /  \\
+  /    \\
+ /      \\
+/________\\
+""",
+"""     /\\
+    /  \\
+   /    \\
+  /      \\
+ /   /\\   \\
+/___/  \\___\\"""
+    ],
+    'cloud': [
+"""   _____
+  /     \\
+ /       \\
+/         \\
+\\         /
+ \\_______/""",
+"""  ______
+ /      \\
+/        \\
+\\        /
+ \\______/"""
+    ],
+    'rocket': [
+"""   /\\
+  /  \\
+ |    |
+ |    |
+ |    |
+/|    |\\
+""",
+"""   /\\
+  /  \\
+ |    |
+ |    |
+/|    |\\
+| |  | |
+| |  | |"""
+    ],
+    'computer': [
+""" _______
+|       |
+|       |
+|_______|
+   | |
+   | |
+  /___\\
+""",
+""" ________
+|        |
+|        |
+|________|
+   ____
+  |    |
+  |____|"""
+    ],
+    'phone': [
+""" _______
+|       |
+|       |
+|       |
+|_______|
+  [___]
+""",
+""" _______
+|       |
+|  ___  |
+| |   | |
+| |___| |
+|_______|
+"""
+    ],
+    'book': [
+""" _______
+|  ___  |
+| |   | |
+| |   | |
+| |___| |
+|_______|
+""",
+"""  _____
+ |   |
+ |   |
+_|   |_
+|_____|"""
+    ],
+    'cup': [
+""" ______
+|      |
+|      |
+|______|
+   ||
+   ||
+   ||
+""",
+"""  ____
+ |    |
+ |    |
+ |____|
+   ||
+   ||"""
+    ],
+    'bottle': [
+"""   __
+  |  |
+  |  |
+  |  |
+  |__|
+ /    \\
+|      |
+ \\____/
+""",
+"""   __
+  |  |
+  |  |
+  |__|
+ /    \\
+|      |
+ \\____/"""
+    ]
+}
+
+
+def get_template(subject: str) -> Optional[str]:
+    """Get an ASCII art template for a subject"""
+    subject_lower = subject.lower()
+
+    for key in ASCII_TEMPLATES.keys():
+        if key in subject_lower:
+            return random.choice(ASCII_TEMPLATES[key])
+
+    return None
+
+
+def list_available_templates() -> List[str]:
+    """List all available template names"""
+    return sorted(list(ASCII_TEMPLATES.keys()))
 
 
 # ============================================================================
@@ -1212,6 +1570,574 @@ def add_effect(
                 result[y] = ''.join(line_list)
 
     return '\n'.join(result)
+
+
+# ============================================================================
+# ASCII MODE - Toggleable ASCII Art Response Enhancement
+# ============================================================================
+
+from dataclasses import dataclass, field
+from typing import Set, Literal, Optional
+import re
+
+@dataclass
+class ASCIIModeConfig:
+    features: Set[Literal['box', 'banner', 'art']] = field(default_factory=lambda: {'box', 'banner', 'art'})
+    show_dialog_on_entry: Literal['always', 'first', 'never'] = 'first'
+    has_entered_before: bool = False
+    line_style: Literal['light', 'heavy', 'double', 'rounded'] = 'rounded'
+
+
+class ASCIIModeManager:
+    _instance: Optional['ASCIIModeManager'] = None
+
+    def __init__(self):
+        self.state: Literal['inactive', 'active', 'showing_dialog'] = 'inactive'
+        self.config = ASCIIModeConfig()
+        ASCIIModeManager._instance = self
+
+    @classmethod
+    def get_instance(cls) -> 'ASCIIModeManager':
+        if cls._instance is None:
+            cls._instance = ASCIIModeManager()
+        return cls._instance
+
+    def enter_mode(self, force_dialog: bool = False) -> str:
+        should_show_dialog = False
+
+        if force_dialog:
+            should_show_dialog = True
+        elif self.config.show_dialog_on_entry == 'always':
+            should_show_dialog = True
+        elif self.config.show_dialog_on_entry == 'first' and not self.config.has_entered_before:
+            should_show_dialog = True
+
+        if should_show_dialog:
+            self.state = 'showing_dialog'
+            return self._show_dialog()
+        else:
+            self.state = 'active'
+            return self._get_activation_message()
+
+    def _show_dialog(self) -> str:
+        return INTERACTIVE_DIALOG
+
+    def _get_activation_message(self) -> str:
+        features_str = ', '.join(sorted(self.config.features))
+        return (
+            f"╔═══════════════════════════════════════════════════════════════╗\n"
+            f"║                 ASCII MODE ACTIVATED                          ║\n"
+            f"╠═══════════════════════════════════════════════════════════════╣\n"
+            f"║  Features: {features_str:<48} ║\n"
+            f"║  Style: {self.config.line_style:<51} ║\n"
+            f"╠═══════════════════════════════════════════════════════════════╣\n"
+            f"║  All responses will be enhanced with ASCII art formatting.   ║\n"
+            f"║  Type 'exit ASCII mode' to deactivate.                       ║\n"
+            f"║  Type 'ascii config show' to view configuration.            ║\n"
+            f"╚═══════════════════════════════════════════════════════════════╝"
+        )
+
+    def exit_mode(self) -> str:
+        self.state = 'inactive'
+        return (
+            "╔═══════════════════════════════════════════════════════════════╗\n"
+            "║                 ASCII MODE DEACTIVATED                         ║\n"
+            "╠═══════════════════════════════════════════════════════════════╣\n"
+            "║  Responses will return to normal text format.                 ║\n"
+            "║  Type 'enter ASCII mode' to reactivate.                       ║\n"
+            "╚═══════════════════════════════════════════════════════════════╝"
+        )
+
+    def handle_dialog_choice(self, choice: str) -> str:
+        self.state = 'active'
+        self.config.has_entered_before = True
+        return self._get_activation_message()
+
+    def get_status(self) -> dict:
+        return {
+            "state": self.state,
+            "is_active": self.state == 'active',
+            "config": {
+                "features": list(self.config.features),
+                "show_dialog_on_entry": self.config.show_dialog_on_entry,
+                "has_entered_before": self.config.has_entered_before,
+                "line_style": self.config.line_style
+            }
+        }
+
+    def set_config(self, key: str, value: str) -> str:
+        if key == 'features':
+            if value == 'all':
+                self.config.features = {'box', 'banner', 'art'}
+            else:
+                features = [f.strip() for f in value.split(',')]
+                valid = {'box', 'banner', 'art'}
+                self.config.features = set(f for f in features if f in valid)
+            return f"Features updated to: {', '.join(sorted(self.config.features))}"
+
+        elif key == 'dialog':
+            if value in ('always', 'first', 'never'):
+                self.config.show_dialog_on_entry = value
+                return f"Dialog behavior set to: {value}"
+            else:
+                return f"Invalid dialog value. Use: always, first, never"
+
+        elif key == 'style':
+            if value in ('light', 'heavy', 'double', 'rounded'):
+                self.config.line_style = value
+                return f"Line style set to: {value}"
+            else:
+                return f"Invalid style. Use: light, heavy, double, rounded"
+
+        else:
+            return f"Unknown config key: {key}. Use: features, dialog, style"
+
+    def transform_response(self, text: str, is_ai_response: bool = True) -> str:
+        if self.state != 'active':
+            return text
+
+        if not text.strip():
+            return text
+
+        lines_to_box = []
+
+        # Feature B: Banner Text - extract key phrase and create banner
+        if 'banner' in self.config.features:
+            banner_text = self._extract_key_phrase(text)
+            if banner_text:
+                banner = create_comic_banner(
+                    text=banner_text,
+                    font_style='block',
+                    emphasis='none',
+                    align='center'
+                )
+                lines_to_box.append(banner)
+
+        # Feature C: ASCII Art - generate complementary art
+        if 'art' in self.config.features:
+            art = self._generate_complementary_art(text)
+            if art:
+                lines_to_box.append(art)
+
+        # Always add the original text
+        lines_to_box.append(text)
+
+        composed = '\n\n'.join(lines_to_box)
+
+        # Feature A: Box Wrapping - wrap everything in a box
+        if 'box' in self.config.features:
+            lines = composed.split('\n')
+
+            # Key insight: Banners/art are decorative but the BOX must be max 40 chars
+            # Only text content gets wrapped at 38 chars; banners may be truncated
+
+            art_chars = set('░▒▓█★╭╮╰╯─│┌┐└┘★•○●◉')
+            max_text_width = 48
+            max_box_width = 50
+
+            def is_decorative_line(line):
+                if not line:
+                    return False
+                art_count = sum(1 for c in line if c in art_chars)
+                return art_count > len(line) * 0.3
+
+            wrapped_lines = []
+            for line in lines:
+                if is_decorative_line(line):
+                    # Truncate decorative lines to fit box width
+                    if len(line) > max_box_width - 4:
+                        wrapped_lines.append(('art', line[:max_box_width - 6] + '..'))
+                    else:
+                        wrapped_lines.append(('art', line))
+                else:
+                    # Wrap text at 38 chars
+                    if len(line) <= max_text_width:
+                        wrapped_lines.append(('text', line))
+                    else:
+                        words = line.split()
+                        current = ''
+                        for word in words:
+                            if len(current) + len(word) + 1 <= max_text_width:
+                                current = (current + ' ' + word).strip()
+                            else:
+                                if current:
+                                    wrapped_lines.append(('text', current))
+                                current = word
+                        if current:
+                            wrapped_lines.append(('text', current))
+
+            chars = UNICODE_SETS[self.config.line_style]
+            box_width = max_box_width
+
+            box_lines = []
+            top_border = chars['top_left'] + chars['horizontal'] * (box_width - 2) + chars['top_right']
+            box_lines.append(top_border)
+
+            inner_width = box_width - 2
+            for line_type, line in wrapped_lines:
+                if len(line) <= inner_width:
+                    padding = (inner_width - len(line)) // 2
+                    box_lines.append(chars['vertical'] + ' ' * padding + line + ' ' * (inner_width - len(line) - padding) + chars['vertical'])
+                else:
+                    box_lines.append(chars['vertical'] + line[:inner_width-2] + '..' + chars['vertical'])
+
+            bottom_border = chars['bottom_left'] + chars['horizontal'] * (box_width - 2) + chars['bottom_right']
+            box_lines.append(bottom_border)
+
+            return '\n'.join(box_lines)
+
+        return composed
+
+    def _extract_key_phrase(self, text: str) -> str:
+        text_clean = re.sub(r'[^\w\s]', '', text)
+        words = text_clean.split()
+        
+        # Extract only 1-2 most important words (shorter is better for banners)
+        # Prioritize: thank-related words, greetings, exclamations
+        priority_words = []
+        other_words = []
+        
+        for word in words:
+            if len(word) < 4:
+                continue
+            word_lower = word.lower()
+            if any(p in word_lower for p in ['thank', 'hello', 'hi', 'hey', 'wow', 'amazing', 'awesome', 'great']):
+                priority_words.append(word)
+            else:
+                other_words.append(word)
+        
+        # Use priority words first, limit to max 2 words
+        selected = priority_words[:2] if priority_words else other_words[:2]
+        return ' '.join(selected).upper() if selected else ''
+
+    def _generate_complementary_art(self, text: str) -> str:
+        text_lower = text.lower()
+
+        if any(word in text_lower for word in ['hello', 'hi', 'hey', 'greetings']):
+            return create_speech_bubble(
+                text="HOWDY!",
+                bubble_style='oval',
+                tail_position='bottom-left',
+                line_style='rounded'
+            )
+        elif any(word in text_lower for word in ['thank', 'thanks', 'appreciate']):
+            return create_comic_banner(
+                text="THANKS!",
+                font_style='block',
+                emphasis='stars',
+                align='center'
+            )
+        elif any(word in text_lower for word in ['yes', 'yeah', 'yep', 'correct']):
+            shapes = [
+                draw_shape('circle', 15, 8, '█', '─'),
+                draw_shape('rectangle', 10, 5, '█', '─')
+            ]
+            return compose_elements(shapes, layout='horizontal', spacing=3)
+        elif any(word in text_lower for word in ['no', 'nope', 'not', 'wrong']):
+            return create_action_effect('ZAP', size='medium', style='bold')
+        elif any(word in text_lower for word in ['wow', 'amazing', 'awesome', 'cool']):
+            return create_action_effect('BOOM', size='medium', style='bold')
+        elif any(word in text_lower for word in ['sorry', 'apologize', 'mistake']):
+            cloud = draw_shape('cloud', 25, 6, '░', '.')
+            return add_effect(cloud, 'sparkles', position='top', intensity=2)
+
+        shapes = [
+            draw_shape('rectangle', 12, 6, '▒', '─'),
+            draw_shape('cloud', 18, 5, '░', '.')
+        ]
+        return compose_elements(shapes, layout='horizontal', spacing=2)
+
+
+INTERACTIVE_DIALOG = """╔═══════════════════════════════════════════════════════════════╗
+║                    ASCII MODE - Select Features                   ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [X] A) Box Wrapping    - Wrap responses in bordered box        ║
+║  [X] B) Banner Text     - Transform text to block letters       ║
+║  [X] C) ASCII Art       - Add complementary ASCII drawings     ║
+╠═══════════════════════════════════════════════════════════════╣
+║  Dialog Behavior: First time only                               ║
+║  [>] Change                                                           ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [S] Save & Continue (Default: A+B+C)    [C] Cancel              ║
+╚═══════════════════════════════════════════════════════════════╝
+
+To customize features, use: ascii config set features=box,banner,art
+To change dialog behavior: ascii config set dialog=always|first|never"""
+
+
+@mcp.tool()
+def enter_ascii_mode(options: bool = False) -> str:
+    """
+    Enter ASCII mode to enable ASCII art-enhanced responses.
+
+    When active, all responses will be formatted with ASCII art elements
+    including bordered boxes, banner text, and complementary drawings.
+
+    Args:
+        options: If True, force showing the feature selection dialog
+
+    Returns:
+        ASCII art confirmation message
+
+    Example:
+        enter_ascii_mode()           # Enter with default settings
+        enter_ascii_mode(options=True)  # Force show feature dialog
+    """
+    manager = ASCIIModeManager.get_instance()
+    return manager.enter_mode(force_dialog=options)
+
+
+@mcp.tool()
+def exit_ascii_mode() -> str:
+    """
+    Exit ASCII mode and return to normal text responses.
+
+    Returns:
+        ASCII art confirmation message
+
+    Example:
+        exit_ascii_mode()
+    """
+    manager = ASCIIModeManager.get_instance()
+    return manager.exit_mode()
+
+
+@mcp.tool()
+def get_ascii_mode_status() -> dict:
+    """
+    Get the current ASCII mode status and configuration.
+
+    Returns:
+        Dictionary containing mode state and configuration
+
+    Example:
+        get_ascii_mode_status()
+    """
+    manager = ASCIIModeManager.get_instance()
+    return manager.get_status()
+
+
+@mcp.tool()
+def ascii_config_show() -> str:
+    """
+    Display the current ASCII mode configuration.
+
+    Returns:
+        ASCII art formatted configuration display
+
+    Example:
+        ascii_config_show()
+    """
+    manager = ASCIIModeManager.get_instance()
+    status = manager.get_status()
+    config = status['config']
+
+    features_str = ', '.join(config['features']) if config['features'] else 'none'
+
+    return (
+        f"╔═══════════════════════════════════════════════════════════════╗\n"
+        f"║                 ASCII MODE CONFIGURATION                        ║\n"
+        f"╠═══════════════════════════════════════════════════════════════╣\n"
+        f"║  State: {status['state']:<51} ║\n"
+        f"║  Active: {str(config['has_entered_before']).upper():<48} ║\n"
+        f"╠═══════════════════════════════════════════════════════════════╣\n"
+        f"║  Features:                                                     ║\n"
+        f"║    [X] Box Wrapping (A)                                        ║\n"
+        f"║    [X] Banner Text (B)                                          ║\n"
+        f"║    [X] ASCII Art (C)                                            ║\n"
+        f"╠═══════════════════════════════════════════════════════════════╣\n"
+        f"║  Dialog Behavior: {config['show_dialog_on_entry']:<41} ║\n"
+        f"║  Line Style: {config['line_style']:<47} ║\n"
+        f"╠═══════════════════════════════════════════════════════════════╣\n"
+        f"║  Commands:                                                     ║\n"
+        f"║    ascii config set features=box,banner,art    (customize)     ║\n"
+        f"║    ascii config set dialog=always|first|never (dialog behavior)║\n"
+        f"║    ascii config set style=rounded|heavy|light|double          ║\n"
+        f"╚═══════════════════════════════════════════════════════════════╝"
+    )
+
+
+@mcp.tool()
+def ascii_config_set(key: str, value: str) -> str:
+    """
+    Set ASCII mode configuration options.
+
+    Args:
+        key: Configuration key (features, dialog, style)
+        value: Configuration value
+
+    Returns:
+        ASCII art confirmation message
+
+    Example:
+        ascii_config_set(key='features', value='box,banner')
+        ascii_config_set(key='dialog', value='always')
+        ascii_config_set(key='style', value='heavy')
+    """
+    manager = ASCIIModeManager.get_instance()
+    result = manager.set_config(key, value)
+
+    return (
+        f"╔═══════════════════════════════════════════════════════════════╗\n"
+        f"║                 ASCII MODE CONFIG UPDATED                       ║\n"
+        f"╠═══════════════════════════════════════════════════════════════╣\n"
+        f"║  {result:<60} ║\n"
+        f"╚═══════════════════════════════════════════════════════════════╝"
+    )
+
+
+@mcp.tool()
+def transform_to_ascii_mode(text: str) -> str:
+    """
+    Transform arbitrary text using the ASCII mode pipeline.
+    This allows testing the transformation without entering ASCII mode.
+
+    Args:
+        text: The text to transform
+
+    Returns:
+        ASCII art transformed text
+
+    Example:
+        transform_to_ascii_mode(text="Hello World!")
+    """
+    manager = ASCIIModeManager.get_instance()
+    return manager.transform_response(text, is_ai_response=True)
+
+
+# ============================================================================
+# ASCII Art Generator Tools
+# ============================================================================
+
+@mcp.tool()
+def generate_ascii_art(
+    subject: str,
+    style: Literal['default', 'detailed', 'simple'] = 'default'
+) -> str:
+    """
+    Generate ASCII art based on a subject description.
+    Uses pre-defined templates for recognizable objects like animals, nature, vehicles, etc.
+
+    Args:
+        subject: Description of what to draw (e.g., 'a dog', 'a cat', 'a tree', 'a house')
+        style: Art style (default, detailed, simple)
+
+    Returns:
+        ASCII art representation of the subject
+
+    Example:
+        generate_ascii_art(subject='a dog running')
+        generate_ascii_art(subject='a cat')
+        generate_ascii_art(subject='a house')
+    """
+    template = get_template(subject)
+
+    if template:
+        return template
+
+    return f"Sorry, I don't have a template for '{subject}'. Try: {', '.join(list_available_templates()[:5])}..."
+
+
+@mcp.tool()
+def list_ascii_art_templates() -> Dict[str, Any]:
+    """
+    List all available ASCII art templates that can be generated.
+
+    Returns:
+        Dictionary of available templates with descriptions
+
+    Example:
+        list_ascii_art_templates()
+    """
+    templates = list_available_templates()
+
+    categories = {
+        'animals': ['dog', 'cat', 'bird', 'fish', 'person'],
+        'nature': ['tree', 'flower', 'mountain', 'sun', 'moon', 'cloud'],
+        'buildings_vehicles': ['house', 'car', 'rocket', 'boat'],
+        'objects': ['heart', 'star', 'computer', 'phone', 'book', 'cup', 'bottle']
+    }
+
+    result = {"available_templates": templates, "by_category": {}}
+
+    for category, items in categories.items():
+        result["by_category"][category] = [t for t in items if t in templates]
+
+    result["total_count"] = len(templates)
+    result["example_usage"] = "generate_ascii_art(subject='a dog')"
+
+    return result
+
+
+# ============================================================================
+# Database Management Tools
+# ============================================================================
+
+@mcp.tool()
+def get_database_stats() -> Dict[str, Any]:
+    """
+    Get statistics about the ASCII art database.
+
+    Returns:
+        Dictionary with database statistics
+
+    Example:
+        get_database_stats()
+    """
+    db_path = os.path.join(os.path.dirname(__file__), 'ascii_art.db')
+
+    if not os.path.exists(db_path):
+        return {
+            "status": "no_database",
+            "message": "Database not initialized yet",
+            "available_templates": len(ASCII_TEMPLATES)
+        }
+
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT COUNT(*) as count FROM ascii_art')
+        total_count = cursor.fetchone()[0]
+
+        cursor.execute('''
+            SELECT category, COUNT(*) as count
+            FROM ascii_art
+            GROUP BY category
+            ORDER BY count DESC
+            LIMIT 10
+        ''')
+        categories = [{"category": row[0], "count": row[1]} for row in cursor.fetchall()]
+
+        cursor.execute('''
+            SELECT
+                AVG(width) as avg_width,
+                AVG(height) as avg_height,
+                AVG(complexity_score) as avg_complexity
+            FROM ascii_art
+        ''')
+        row = cursor.fetchone()
+        averages = {
+            "avg_width": round(row[0] or 0, 1),
+            "avg_height": round(row[1] or 0, 1),
+            "avg_complexity": round(row[2] or 0, 2)
+        }
+
+        conn.close()
+
+        return {
+            "status": "connected",
+            "total_ascii_art": total_count,
+            "categories": categories,
+            "averages": averages,
+            "available_templates": len(ASCII_TEMPLATES)
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": str(e),
+            "available_templates": len(ASCII_TEMPLATES)
+        }
 
 
 # ============================================================================

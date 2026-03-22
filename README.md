@@ -210,6 +210,79 @@ create_comic_panel(
 
 List all available ASCII art styles with their visual properties.
 
+## ASCII Mode
+
+ASCII Mode is a toggleable feature that transforms AI assistant responses into ASCII art-enriched format. When activated, all responses pass through a transformation pipeline.
+
+### Activation
+
+```python
+enter_ascii_mode()           # Enter with default settings (A+B+C)
+enter_ascii_mode(options=True)  # Force show feature selection dialog
+```
+
+### Deactivation
+
+```python
+exit_ascii_mode()            # Return to normal text responses
+```
+
+### Configuration
+
+```python
+ascii_config_show()          # Display current configuration
+ascii_config_set(key='features', value='box,banner,art')  # Customize features
+ascii_config_set(key='dialog', value='always')  # Dialog behavior
+ascii_config_set(key='style', value='heavy')  # Box line style
+```
+
+### Features
+
+| Feature | Description |
+|---------|-------------|
+| **A) Box Wrapping** | Wrap responses in bordered ASCII boxes |
+| **B) Banner Text** | Transform key phrases into block letters |
+| **C) ASCII Art** | Add complementary ASCII drawings |
+
+### Configuration Options
+
+**Features:**
+- `ascii config set features=box,banner` - Enable only box and banner
+- `ascii config set features=all` - Enable all features (default: A+B+C)
+
+**Dialog Behavior:**
+- `ascii config set dialog=always` - Show dialog every entry
+- `ascii config set dialog=first` - Show dialog only first time (default)
+- `ascii config set dialog=never` - Never show dialog
+
+**Line Styles:**
+- `ascii config set style=light` - Minimal, clean lines
+- `ascii config set style=heavy` - Bold, emphatic lines
+- `ascii config set style=double` - Formal, double lines
+- `ascii config set style=rounded` - Friendly, rounded corners (default)
+
+### Status Check
+
+```python
+get_ascii_mode_status()      # Get current mode state and config
+```
+
+### Interactive Dialog
+
+On first entry (or with `options=True`), ASCII mode shows a selection dialog:
+
+```
+╔═══════════════════════════════════════════════════════════════╗
+║                    ASCII MODE - Select Features                   ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [X] A) Box Wrapping    - Wrap responses in bordered box        ║
+║  [X] B) Banner Text     - Transform text to block letters       ║
+║  [X] C) ASCII Art       - Add complementary ASCII drawings     ║
+╠═══════════════════════════════════════════════════════════════╣
+║  [S] Save & Continue (Default: A+B+C)    [C] Cancel              ║
+╚═══════════════════════════════════════════════════════════════╝
+```
+
 ## Style Options
 
 ### Line Styles
@@ -250,11 +323,12 @@ List all available ASCII art styles with their visual properties.
 ### Speech Bubble
 
 ```
-╭──────────────────╮
-│  HELLO WORLD!    │
-╰──────────────────╯
-   \/
+╭────────────────────╮
+│    HELLO WORLD!    │
+╰────────────────────╯
+   \
     \
+     \
 ```
 
 ### Action Effect
@@ -265,12 +339,6 @@ List all available ASCII art styles with their visual properties.
 █████   █████  █████  █████
     █   █      █   █      █
 █████   █████  █   █  █████
-```
-
-### Progress Bar
-
-```
-[████████████░░░░░░░░░░░░] 50%
 ```
 
 ### Banner with Stars
@@ -299,6 +367,25 @@ List all available ASCII art styles with their visual properties.
 │  ★                                                                         ★  │
 │  ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★  │
 └───────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Composed Elements
+
+```
+╭────────────────────╮
+│    HELLO WORLD!    │
+╰────────────────────╯
+   \
+    \
+     \
+
+★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★
+★ █████   █   █████  █████ ★
+★ █       █   █      █     ★
+★ ███     █   ███    ███   ★
+★ █       █   █      █     ★
+★ █       █   █████  █████ ★
+★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★ ★
 ```
 
 ## Requirements
