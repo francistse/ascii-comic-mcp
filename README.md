@@ -6,8 +6,98 @@ A FastMCP server for generating comic-style ASCII art with speech bubbles, bold 
 
 **Language / 语言:** [English](README.md) | [简体中文](README.zh_CN.md)
 
+## ⭐ Featured: Pip-Boy Mode
+
+Transform your responses into authentic Fallout Pip-Boy 3000 interface with Vault Boy and speech bubbles!
+
+### Sample Output
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  ═══ PIP-BOY 3000 MARK V ═══                                 ║
+║  ──────────────────────────────────────────────────────────  ║
+║                                                              ║
+║ ⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀  ╔═══════════════════════╗            ║
+║ ⠀⠀⠀⠀⠀⠀⠀⢀⣿⣷⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀  ║ HELLO! Welcome to the ║            ║
+║ ⠀⣴⣇⢀⣿⠉⠙⠁⠀⠀⠀⠈⠻⣆⠀⠀⠀⠀⠀⠀⠀⠀  ║      wasteland!       ║            ║
+║ ⠸⡇:::: ⢀⠶⣄⣤⠛⣧:::::: ⠈⢿⣄⠈⢿⣄⠈                  ║            ║
+║ ⢸⠉⣶⡿...............      ╚════════════════════════╝       ║
+║ ⠀...............      ╚═══╝                            ║
+║ ..............     ╚═════╝                           ║
+║ ..............    ╚═══════╝                          ║
+║                                                              ║
+║  ──────────────────────────────────────────────────────────  ║
+║[RADIO] [STATUS] [DATA] [MAP]                                 ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+### Quick Start
+
+```python
+# Activate Pip-Boy mode
+enter_pip_boy_mode()
+
+# Transform text with Vault Boy and speech bubble
+transform_to_pip_boy("HELLO! Welcome to the wasteland!")
+
+# Check status
+get_pip_boy_status()
+
+# Exit when done
+exit_pip_boy_mode()
+```
+
+### Background
+
+The **Pip-Boy** (Personal Information Processor) is a wearable computer manufactured by **RobCo Industries** and licensed to **Vault-Tec** for use in their Vaults. Every Vault dweller was issued a Pip-Boy upon entering the Vault, making it an essential tool for survival in the post-apocalyptic wasteland.
+
+**Lore Summary:**
+- **Name**: "Pip" stands for **Personal Information Processor**
+- **Manufacturer**: RobCo Industries (licensed to Vault-Tec)
+- **Purpose**: Health tracking, map navigation, inventory management, radio, Geiger counter
+- **Interface**: Black monochrome screen with green/amber text display
+- **Mascot**: Vault Boy is the official RobCo/Pip-Boy corporate mascot
+- **Models**: Pip-Boy 2000, Pip-Boy 3000 (Mark IV, Mark V), and variants
+
+The Pip-Boy 3000 features a gauntlet design that seals with a biometric lock, worn on the user's wrist. It's powered by an internal Fission battery and built to withstand any situation the wasteland throws at it.
+
+### Pip-Boy Tools
+
+#### `enter_pip_boy_mode`
+
+Activate Pip-Boy mode for themed Fallout responses.
+
+```python
+enter_pip_boy_mode()
+```
+
+#### `exit_pip_boy_mode`
+
+Deactivate Pip-Boy mode and return to normal responses.
+
+```python
+exit_pip_boy_mode()
+```
+
+#### `get_pip_boy_status`
+
+Check current Pip-Boy mode state and configuration.
+
+```python
+get_pip_boy_status()
+```
+
+#### `transform_to_pip_boy`
+
+Transform text with Vault Boy and speech bubble (works without activating mode).
+
+```python
+transform_to_pip_boy("Your message here")
+```
+
 ## Features
 
+- **Pip-Boy Mode**: Fallout-themed Vault Boy with speech bubbles (see showcase above ⬆️)
 - **Speech Bubbles**: Create comic-style speech bubbles with various shapes (oval, rectangular, cloud, thought)
 - **Bold Banners**: Generate stylized multi-line text banners with emphasis effects
 - **Action Effects**: Create comic action words like BANG, BOOM, POW, WHAM, CRASH, ZAP
@@ -443,7 +533,7 @@ On first entry (or with `options=True`), ASCII mode shows a selection dialog:
 
 ## License
 
-MIT License
+[MIT License](LICENSE) - See LICENSE file for details
 
 ## Acknowledgments
 

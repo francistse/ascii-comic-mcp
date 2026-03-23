@@ -696,3 +696,84 @@ To migrate new character art to this system:
 3. **Test Scaling**: Use `scale()` method with various target dimensions
 4. **Generate Variants**: Use `generate_variants()` for pre-defined sizes
 5. **Integrate**: Add as MCP tool with proper parameter handling
+
+---
+
+## Pip-Boy Mode
+
+Pip-Boy mode is a Fallout-themed mode that renders Vault Boy with speech bubbles containing user text.
+
+### Background
+
+The Pip-Boy (Personal Information Processor) is a wearable computer manufactured by RobCo Industries and licensed to Vault-Tec for use in their Vaults. Every Vault dweller was issued a Pip-Boy upon entering the Vault.
+
+**Lore Summary:**
+- **Name**: "Pip" stands for **Personal Information Processor** (acronym)
+- **Manufacturer**: RobCo Industries (licensed to Vault-Tec)
+- **Purpose**: Health tracking, map navigation, inventory management, radio, Geiger counter
+- **Interface**: Black monochrome screen with green/amber text display
+- **Mascot**: Vault Boy is the official RobCo/Pip-Boy corporate mascot
+- **Models**: Pip-Boy 2000, Pip-Boy 3000 (Mark IV, Mark V), and variants
+
+The Pip-Boy 3000 features a gauntlet design that seals with a biometric lock, worn on the user's wrist. It's powered by an internal Fission battery and built to withstand any situation the wasteland throws at it.
+
+### Activation
+
+```
+enter_pip_boy_mode()           # Enter Pip-Boy mode
+exit_pip_boy_mode()            # Exit Pip-Boy mode
+```
+
+### Status Check
+
+```
+get_pip_boy_status()           # Get current Pip-Boy mode state
+```
+
+### Transform Function
+
+```
+transform_to_pip_boy(text)     # Transform text with Vault Boy and speech bubble
+```
+
+### How It Works
+
+1. **Text Wrapping**: Automatically wraps text to fit within speech bubble
+2. **Character Scaling**: Uses small Vault Boy (50% scale) for compact display
+3. **Horizontal Layout**: Vault Boy on left, speech bubble on right
+4. **Pip-Boy 3000 Interface**: Authentic Fallout-style header and footer frame
+
+### Text Wrapping Rules
+
+- Wraps at word boundaries when possible
+- Long words are broken at max width
+- Preserves line breaks in original text
+- No indentation on wrapped lines
+
+### Example Usage
+
+```python
+# Activate Pip-Boy mode
+enter_pip_boy_mode()
+
+# Transform some text
+transform_to_pip_boy("Welcome to the wasteland!")
+
+# Exit when done
+exit_pip_boy_mode()
+```
+
+### Spacing Verification
+
+Use `verify_spacing.py` to verify ASCII art output:
+
+```bash
+python verify_spacing.py
+```
+
+This script checks:
+- Line length consistency
+- Box drawing alignment
+- Character spacing
+- Vertical spacing
+- Braille character spacing

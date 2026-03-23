@@ -2032,6 +2032,307 @@ def transform_to_ascii_mode(text: str) -> str:
 
 
 # ============================================================================
+# PIP-BOY MODE - Fallout-style Vault Boy with Speech Bubble
+# ============================================================================
+
+PIP_BOY_CHARS = {
+    'horizontal': '═', 'vertical': '║',
+    'top_left': '╔', 'top_right': '╗',
+    'bottom_left': '╚', 'bottom_right': '╝',
+}
+
+
+class PipBoyModeManager:
+    """
+    Pip-Boy mode renders Vault Boy with a speech bubble containing user text.
+    Text is properly wrapped to fit within the bubble without indentation issues.
+    """
+
+    _instance: Optional['PipBoyModeManager'] = None
+
+    def __init__(self):
+        self.state: Literal['inactive', 'active'] = 'inactive'
+        PipBoyModeManager._instance = self
+
+    @classmethod
+    def get_instance(cls) -> 'PipBoyModeManager':
+        if cls._instance is None:
+            cls._instance = PipBoyModeManager()
+        return cls._instance
+
+    def enter_mode(self) -> str:
+        self.state = 'active'
+        return self._get_activation_message()
+
+    def _get_activation_message(self) -> str:
+        boot_lines = [
+            "ROBCO INDUSTRIES (TM) TERMALIST",
+            "PIP-BOY 3000 MARK V v1.0",
+            "(C)2075-2077 ROBCO INDUSTRIES",
+            "- SERVER 1 -",
+            "",
+            "INITIALIZING PIP-OS...",
+            "LOADING USER PROFILE...",
+            "VAULT BOY MASCOT READY",
+        ]
+
+        width = 58
+        lines = []
+        lines.append("╔" + "═" * (width - 2) + "╗")
+        lines.append("║" + " " * (width - 2) + "║")
+
+        for boot_line in boot_lines:
+            padding = width - 2 - len(boot_line)
+            lines.append("║  " + boot_line + " " * (padding - 2) + "║")
+
+        lines.append("║" + " " * (width - 2) + "║")
+        lines.append("╠" + "═" * (width - 2) + "╣")
+        lines.append("║  PIP-BOY MODE ACTIVATED                                     ║")
+        lines.append("║  Vault Boy will appear with speech bubbles for responses.    ║")
+        lines.append("║  Type 'exit pip-boy mode' to deactivate.                   ║")
+        lines.append("╚" + "═" * (width - 2) + "╝")
+
+        return '\n'.join(lines)
+
+    def exit_mode(self) -> str:
+        self.state = 'inactive'
+        lines = []
+        width = 58
+        lines.append("╔" + "═" * (width - 2) + "╗")
+        lines.append("║" + " " * (width - 2) + "║")
+        lines.append("║  PIP-BOY MODE DEACTIVATED                                   ║")
+        lines.append("║  Responses will return to normal text format.              ║")
+        lines.append("║  Type 'enter pip-boy mode' to reactivate.                   ║")
+        lines.append("║" + " " * (width - 2) + "║")
+        lines.append("║  SAVING DATA...                                              ║")
+        lines.append("║  CLOSING PIP-OS...                                          ║")
+        lines.append("║  GOODBYE!                                                    ║")
+        lines.append("║" + " " * (width - 2) + "║")
+        lines.append("╚" + "═" * (width - 2) + "╝")
+        return '\n'.join(lines)
+
+    def get_status(self) -> dict:
+        return {
+            "state": self.state,
+            "is_active": self.state == 'active',
+        }
+
+    def _wrap_text(self, text: str, max_width: int) -> List[str]:
+        """
+        Wrap text to fit within max_width without indentation problems.
+        Handles long words by breaking them at max_width.
+        """
+        wrapped_lines = []
+        lines = text.split('\n')
+
+        for line in lines:
+            if not line:
+                wrapped_lines.append('')
+                continue
+
+            words = line.split()
+            current_line = ''
+            current_len = 0
+
+            for word in words:
+                word_len = len(word)
+
+                if current_len == 0:
+                    if word_len > max_width:
+                        while word_len > max_width:
+                            wrapped_lines.append(word[:max_width])
+                            word = word[max_width:]
+                            word_len = len(word)
+                        current_line = word
+                        current_len = word_len
+                    else:
+                        current_line = word
+                        current_len = word_len
+                elif current_len + 1 + word_len <= max_width:
+                    current_line += ' ' + word
+                    current_len += 1 + word_len
+                else:
+                    wrapped_lines.append(current_line)
+                    current_line = word
+                    current_len = word_len
+
+            if current_line:
+                wrapped_lines.append(current_line)
+
+        return wrapped_lines
+
+    def _create_speech_bubble(self, text: str, max_width: int = 36) -> str:
+        """
+        Create a Fallout-style speech bubble with properly wrapped text.
+        """
+        wrapped_lines = self._wrap_text(text, max_width)
+
+        if not wrapped_lines:
+            wrapped_lines = ['']
+
+        bubble_width = min(max(len(line) for line in wrapped_lines) + 4, max_width + 4)
+
+        lines = []
+        top_border = f"╔{'═' * (bubble_width - 2)}╗"
+        lines.append(top_border)
+
+        for line in wrapped_lines:
+            padding = bubble_width - 2 - len(line)
+            left_pad = padding // 2
+            right_pad = padding - left_pad
+            lines.append(f"║{' ' * left_pad}{line}{' ' * right_pad}║")
+
+        bottom_border = f"╚{'═' * (bubble_width - 2)}╝"
+        lines.append(bottom_border)
+
+        tail_line1 = ' ' * 4 + '╚' + '═' * 3 + '╝'
+        tail_line2 = ' ' * 3 + '╚' + '═' * 5 + '╝'
+        tail_line3 = ' ' * 2 + '╚' + '═' * 7 + '╝'
+
+        lines.append(tail_line1)
+        lines.append(tail_line2)
+        lines.append(tail_line3)
+
+        return '\n'.join(lines)
+
+    def transform_response(self, text: str, force: bool = False) -> str:
+        """
+        Transform response by adding Vault Boy with speech bubble.
+        Fallout-style Pip-Boy 3000 interface with speech bubble.
+
+        Args:
+            text: The text to transform
+            force: If True, always transform regardless of mode state
+        """
+        if self.state != 'active' and not force:
+            return text
+
+        if not text.strip():
+            return text
+
+        vault_boy = generate_vault_boy(size='small')
+        speech_bubble = self._create_speech_bubble(text, max_width=24)
+
+        combined = compose_elements([vault_boy, speech_bubble], layout='horizontal', spacing=2)
+
+        width = 64
+        inner_width = width - 2
+
+        lines = []
+        lines.append("╔" + "═" * inner_width + "╗")
+
+        header_line = "  ═══ PIP-BOY 3000 MARK V ═══"
+        header_padding = inner_width - len(header_line)
+        lines.append("║" + header_line + " " * header_padding + "║")
+
+        divider_content = "─" * (inner_width - 4)
+        lines.append("║  " + divider_content + "  ║")
+
+        lines.append("║" + " " * inner_width + "║")
+
+        content_lines = combined.split('\n')
+        max_content_lines = 14
+
+        for line in content_lines[:max_content_lines]:
+            line_len = len(line)
+            if line_len > inner_width - 4:
+                line = line[:inner_width - 7] + "..."
+                line_len = len(line)
+
+            padding = inner_width - 2 - line_len
+            lines.append("║ " + line + " " * padding + " ║")
+
+        lines.append("║" + " " * inner_width + "║")
+        lines.append("║  " + divider_content + "  ║")
+
+        nav_buttons = "[RADIO] [STATUS] [DATA] [MAP]"
+        nav_padding = inner_width - len(nav_buttons)
+        lines.append("║" + nav_buttons + " " * nav_padding + "║")
+
+        lines.append("╚" + "═" * inner_width + "╝")
+
+        return '\n'.join(lines)
+
+
+_pip_boy_manager: Optional[PipBoyModeManager] = None
+
+
+def get_pip_boy_manager() -> PipBoyModeManager:
+    """Get or create the Pip-Boy manager singleton."""
+    global _pip_boy_manager
+    if _pip_boy_manager is None:
+        _pip_boy_manager = PipBoyModeManager()
+    return _pip_boy_manager
+
+
+@mcp.tool()
+def enter_pip_boy_mode() -> str:
+    """
+    Enter Pip-Boy mode to enable Vault Boy responses with speech bubbles.
+
+    When active, Vault Boy will appear with speech bubbles containing responses.
+    Text is automatically wrapped to fit within the bubble.
+
+    Returns:
+        ASCII art confirmation message
+
+    Example:
+        enter_pip_boy_mode()
+    """
+    manager = get_pip_boy_manager()
+    return manager.enter_mode()
+
+
+@mcp.tool()
+def exit_pip_boy_mode() -> str:
+    """
+    Exit Pip-Boy mode and return to normal text responses.
+
+    Returns:
+        ASCII art confirmation message
+
+    Example:
+        exit_pip_boy_mode()
+    """
+    manager = get_pip_boy_manager()
+    return manager.exit_mode()
+
+
+@mcp.tool()
+def get_pip_boy_status() -> dict:
+    """
+    Get the current Pip-Boy mode status.
+
+    Returns:
+        Dictionary containing mode state
+
+    Example:
+        get_pip_boy_status()
+    """
+    manager = get_pip_boy_manager()
+    return manager.get_status()
+
+
+@mcp.tool()
+def transform_to_pip_boy(text: str) -> str:
+    """
+    Transform text using Pip-Boy mode (Vault Boy with speech bubble).
+    This allows testing the transformation without entering Pip-Boy mode.
+
+    Args:
+        text: The text to transform
+
+    Returns:
+        Vault Boy ASCII art with speech bubble
+
+    Example:
+        transform_to_pip_boy(text="Hello, world!")
+    """
+    manager = get_pip_boy_manager()
+    return manager.transform_response(text, force=True)
+
+
+# ============================================================================
 # ASCII Art Generator Tools
 # ============================================================================
 
@@ -2470,7 +2771,19 @@ def get_vault_boy_scaler() -> VaultBoyScaler:
 
         if os.path.exists(vault_boy_path):
             with open(vault_boy_path, 'r', encoding='utf-8') as f:
-                art_data = f.read()
+                all_lines = f.read().split('\n')
+            if len(all_lines) > 1:
+                header = all_lines[0]
+                art_lines = all_lines[1:]
+                i = 0
+                while i < len(art_lines) and not (
+                    art_lines[i].strip() == '' or 
+                    i > 60
+                ):
+                    i += 1
+                art_data = header + '\n' + '\n'.join(art_lines[:i])
+            else:
+                art_data = all_lines[0]
         else:
             art_data = VAULT_BOY_ART
 

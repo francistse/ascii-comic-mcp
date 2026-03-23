@@ -1,4 +1,164 @@
-# ASCII Mode Release Notes
+# ASCII Comic MCP Server - Release Notes
+
+## Version 1.1.0 - Pip-Boy Mode Added
+
+**Release Date:** 2026-03-24
+
+---
+
+## Overview
+
+Version 1.1.0 introduces **Pip-Boy Mode**, a Fallout-themed feature that transforms responses into authentic Pip-Boy 3000 interface with Vault Boy and speech bubbles. This release also includes the new Spacing Verification tool for ensuring ASCII art quality.
+
+---
+
+## New Features
+
+### 🎮 Pip-Boy Mode
+
+Transform your responses into authentic Fallout Pip-Boy 3000 interface!
+
+**Sample Output:**
+
+```
+╔══════════════════════════════════════════════════════════════╗
+║  ═══ PIP-BOY 3000 MARK V ═══                                 ║
+║  ──────────────────────────────────────────────────────────  ║
+║                                                              ║
+║ ⠀⠀⠀⠀⠀⠀⠀⠀⢀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀  ╔═══════════════════════╗            ║
+║ ⠀⠀⠀⠀⠀⠀⣶⣿⣷⣀⢀⣤⣤⣤⠶⠶⠶⠶  ║ HELLO! Welcome to the ║            ║
+║ ⠀⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉  ║      wasteland!       ║            ║
+║ ⠀⠈⠉⠛⠛⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿  ╚═══════════════════════╝            ║
+║ ⠀⠈⠉⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛  ╚═══╝                            ║
+║ ⠀⠈⠉⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛  ╚═════╝                           ║
+║ ⠀⠈⠉⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛  ╚═══════╝                          ║
+║                                                              ║
+║  ──────────────────────────────────────────────────────────  ║
+║[RADIO] [STATUS] [DATA] [MAP]                                 ║
+╚══════════════════════════════════════════════════════════════╝
+```
+
+### 📐 Spacing Verification Tool
+
+New `verify_spacing.py` script for validating ASCII art output:
+
+```bash
+python verify_spacing.py
+```
+
+Checks for:
+- Line length consistency
+- Box drawing alignment
+- Character spacing issues
+- Vertical spacing problems
+- Braille character spacing
+
+### 🎯 Scalable Vault Boy Art
+
+- Extracts single Vault Boy panel from multi-panel source
+- Three scaling algorithms: fast, quality, high_quality
+- Pre-defined size variants: tiny (25%), small (50%), medium (100%), large (150%), extra_large (200%)
+- Character density preservation using Braille/Block mapping
+
+---
+
+## New MCP Tools
+
+| Tool | Purpose |
+|------|---------|
+| `enter_pip_boy_mode()` | Activate Pip-Boy mode for themed Fallout responses |
+| `exit_pip_boy_mode()` | Deactivate Pip-Boy mode |
+| `get_pip_boy_status()` | Check current Pip-Boy mode state |
+| `transform_to_pip_boy(text)` | Transform text with Vault Boy and speech bubble |
+| `generate_vault_boy(size, scale_factor, scaling_mode)` | Generate Vault Boy at various sizes |
+| `get_vault_boy_info()` | Get Vault Boy dimensions and scaling info |
+| `scale_vault_boy(target_width, scaling_mode)` | Scale Vault Boy to specific dimensions |
+| `list_character_art()` | List available character art templates |
+
+---
+
+## Pip-Boy Lore
+
+The **Pip-Boy** (Personal Information Processor) is a wearable computer manufactured by **RobCo Industries** and licensed to **Vault-Tec**.
+
+- **Name**: "Pip" = Personal Information Processor
+- **Manufacturer**: RobCo Industries (Vault-Tec licensed)
+- **Purpose**: Health tracking, map navigation, inventory, radio, Geiger counter
+- **Interface**: Black monochrome with green/amber display
+- **Mascot**: Vault Boy (RobCo official mascot)
+- **Models**: Pip-Boy 2000, Pip-Boy 3000 (Mark IV, Mark V)
+
+---
+
+## Bug Fixes
+
+### Version 1.1.0
+
+- ✅ Fixed duplicate Vault Boy heads appearing in Pip-Boy output
+- ✅ Fixed border alignment issues in Pip-Boy mode
+- ✅ All lines now consistently 64 characters wide
+- ✅ Proper text wrapping without indentation problems
+
+### Version 1.0.0
+
+- N/A - Initial release
+
+---
+
+## Technical Details
+
+### Pip-Boy Implementation
+
+- Singleton pattern for Vault Boy scaler
+- First panel extraction from multi-panel source file
+- Three scaling modes with different quality/speed tradeoffs
+- Horizontal composition: Vault Boy left, speech bubble right
+- Automatic text wrapping at word boundaries
+
+### Spacing Verification
+
+Automated checks for:
+- Line length consistency (variations should be minimal)
+- Box drawing character alignment
+- Proper spacing around box characters
+- Vertical spacing (no excessive empty lines)
+- Braille pattern spacing in high-density art
+
+---
+
+## Migration Guide
+
+### Upgrading from 1.0.0
+
+No breaking changes. Pip-Boy mode is opt-in.
+
+```python
+# New in 1.1.0 - Try Pip-Boy mode!
+enter_pip_boy_mode()
+transform_to_pip_boy("Your message here")
+exit_pip_boy_mode()
+```
+
+---
+
+## Known Limitations
+
+- Pip-Boy mode uses 64-character fixed width
+- Speech bubble max width is 24 characters for proper display
+- Vault Boy extraction works with specific file format (header + art lines)
+- Spacing verification is informational only (warnings, not errors)
+
+---
+
+## Credits
+
+**Project Maintainer:** Francis Tse
+
+**Inspiration:**
+- [dmarsters/ascii-art-mcp](https://github.com/dmarsters/ascii-art-mcp) - Original ASCII Art MCP Server
+- Fallout Franchise - Pip-Boy concept and Vault Boy mascot
+
+---
 
 ## Version 1.0.0 - ASCII Mode Launch
 
