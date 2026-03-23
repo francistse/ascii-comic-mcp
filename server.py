@@ -1811,24 +1811,17 @@ class ASCIIModeManager:
     def _extract_key_phrase(self, text: str) -> str:
         text_clean = re.sub(r'[^\w\s]', '', text)
         words = text_clean.split()
-        
-        # Extract only 1-2 most important words (shorter is better for banners)
-        # Prioritize: thank-related words, greetings, exclamations
-        priority_words = []
-        other_words = []
-        
+
+        priority_keywords = ['thank', 'hello', 'hi', 'hey', 'wow', 'amazing', 'awesome', 'great', 'yes', 'cool', 'correct', 'love', 'happy', 'sorry', 'wrong', 'no', 'error', 'great']
+
         for word in words:
             if len(word) < 4:
                 continue
             word_lower = word.lower()
-            if any(p in word_lower for p in ['thank', 'hello', 'hi', 'hey', 'wow', 'amazing', 'awesome', 'great']):
-                priority_words.append(word)
-            else:
-                other_words.append(word)
-        
-        # Use priority words first, limit to max 2 words
-        selected = priority_words[:2] if priority_words else other_words[:2]
-        return ' '.join(selected).upper() if selected else ''
+            if any(keyword in word_lower for keyword in priority_keywords):
+                return word.upper()
+
+        return ''
 
     def _generate_complementary_art(self, text: str) -> str:
         text_lower = text.lower()
@@ -1841,37 +1834,32 @@ class ASCIIModeManager:
                 line_style='rounded'
             )
         elif any(word in text_lower for word in ['thank', 'thanks', 'appreciate']):
-            shapes = [
-                draw_shape('heart', 12, 8, '♥', '─'),
-                draw_shape('star', 10, 8, '★', '─')
-            ]
-            return compose_elements(shapes, layout='horizontal', spacing=3)
+            return create_speech_bubble(
+                text="MUCH obliged!",
+                bubble_style='oval',
+                tail_position='bottom-right',
+                line_style='rounded'
+            )
+        elif any(word in text_lower for word in ['great', 'awesome', 'fantastic']):
+            return create_speech_bubble(
+                text="RIGHT ON!",
+                bubble_style='rectangular',
+                tail_position='bottom-left',
+                line_style='rounded'
+            )
         elif any(word in text_lower for word in ['yes', 'yeah', 'yep', 'correct']):
-            shapes = [
-                draw_shape('circle', 12, 6, '●', '─'),
-                draw_shape('arrow', 10, 6, '►', '─')
-            ]
-            return compose_elements(shapes, layout='horizontal', spacing=3)
-        elif any(word in text_lower for word in ['no', 'nope', 'not', 'wrong']):
-            shapes = [
-                draw_shape('rectangle', 10, 5, '■', '─'),
-                draw_shape('x', 8, 5, '×', '─')
-            ]
-            return compose_elements(shapes, layout='horizontal', spacing=3)
-        elif any(word in text_lower for word in ['wow', 'amazing', 'awesome', 'cool']):
+            return create_speech_bubble(
+                text="YEP!",
+                bubble_style='cloud',
+                tail_position='bottom-right',
+                line_style='rounded'
+            )
+        elif any(word in text_lower for word in ['wow', 'amazing', 'cool']):
             return create_action_effect('BOOM', size='medium', style='bold')
-        elif any(word in text_lower for word in ['sorry', 'apologize', 'mistake']):
-            cloud = draw_shape('cloud', 25, 6, '☁', '─')
-            return add_effect(cloud, 'sparkles', position='top', intensity=2)
-        elif any(word in text_lower for word in ['love', 'heart', 'like']):
-            heart = draw_shape('heart', 14, 8, '♥', '─')
-            return add_effect(heart, 'sparkles', position='bottom', intensity=2)
+        elif any(word in text_lower for word in ['no', 'nope', 'not', 'wrong', 'error']):
+            return create_action_effect('ERROR', size='medium', style='bold')
 
-        shapes = [
-            draw_shape('rectangle', 12, 6, '■', '─'),
-            draw_shape('cloud', 18, 5, '☁', '─')
-        ]
-        return compose_elements(shapes, layout='horizontal', spacing=2)
+        return ''
 
 
 INTERACTIVE_DIALOG = """╔═══════════════════════════════════════════════════════════════╗
