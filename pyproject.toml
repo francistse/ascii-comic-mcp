@@ -50,6 +50,7 @@ include = [
     "ascii_shading.yaml",
     "layout_composition.yaml",
     "fastmcp.json",
+    "vault_boy_ascii.txt",
 ]
 
 [tool.uv]

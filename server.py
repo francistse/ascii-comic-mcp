@@ -2767,7 +2767,7 @@ def get_vault_boy_scaler() -> VaultBoyScaler:
     """Get or create the Vault Boy scaler singleton."""
     global _vault_boy_scaler
     if _vault_boy_scaler is None:
-        vault_boy_path = os.path.join(os.path.dirname(__file__), 'ascii_learning', 'data', 'vault_boy.txt')
+        vault_boy_path = os.path.join(os.path.dirname(__file__), 'vault_boy_ascii.txt')
 
         if os.path.exists(vault_boy_path):
             with open(vault_boy_path, 'r', encoding='utf-8') as f:
