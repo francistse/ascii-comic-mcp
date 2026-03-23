@@ -591,3 +591,108 @@ On first entry (or with `options=True`), ASCII mode shows a selection dialog:
 ║  [S] Save & Continue (Default: A+B+C)    [C] Cancel              ║
 ╚═══════════════════════════════════════════════════════════════╝
 ```
+
+## Scalable Character Art (Vault Boy)
+
+The system supports scalable character art rendering with quality preservation across different sizes.
+
+### Character Art Tools
+
+#### `generate_vault_boy`
+
+Generate Vault Boy ASCII art at various sizes.
+
+```
+Parameters:
+- size: tiny | small | medium | large | extra_large | custom
+- custom_width: Target width for custom size
+- custom_height: Target height (optional, auto-calculated)
+- scale_factor: Override with specific scale (e.g., 0.5)
+- scaling_mode: fast | quality | high_quality
+```
+
+**Examples:**
+```python
+# Pre-defined sizes
+generate_vault_boy(size='small')
+generate_vault_boy(size='large')
+
+# Custom dimensions
+generate_vault_boy(size='custom', custom_width=80)
+
+# Scale by factor
+generate_vault_boy(scale_factor=0.5, scaling_mode='fast')
+```
+
+#### `get_vault_boy_info`
+
+Get dimensions and scaling information.
+
+```
+Returns: Dictionary with character dimensions, scaling modes, and size options
+```
+
+#### `scale_vault_boy`
+
+Scale Vault Boy to specific dimensions.
+
+```
+Parameters:
+- target_width: Desired output width
+- target_height: Desired output height (optional)
+- scale_factor: Alternative scaling factor
+- scaling_mode: fast | quality | high_quality
+```
+
+#### `list_character_art`
+
+List all available character art templates.
+
+```
+Returns: Dictionary with available characters
+```
+
+### Scaling Algorithms
+
+| Mode | Algorithm | Quality | Speed |
+|------|-----------|---------|-------|
+| `fast` | Nearest neighbor | Low | Fastest |
+| `quality` | Bilinear interpolation | Medium | Balanced |
+| `high_quality` | Anti-aliased | High | Slowest |
+
+### Size Variants
+
+| Size | Scale | Approximate Width |
+|------|-------|-------------------|
+| tiny | 25% | ~20 chars |
+| small | 50% | ~40 chars |
+| medium | 100% | ~80 chars |
+| large | 150% | ~120 chars |
+| extra_large | 200% | ~160 chars |
+
+### Character Density Mapping
+
+The high-quality scaling uses Braille/Block character density mapping:
+
+```
+Density Range → Character
+0.0 - 0.1    → ' ' (space)
+0.1 - 0.3    → '⠄' (25%)
+0.3 - 0.5    → '⠂' (33%)
+0.5 - 0.6    → '⠁' (50%)
+0.6 - 0.7    → '⠇' (60%)
+0.7 - 0.8    → '⠏' (70%)
+0.8 - 0.9    → '⠟' (80%)
+0.9 - 0.95   → '⠿' (90%)
+0.95 - 1.0   → '⣿' (100%)
+```
+
+### Migration Workflow
+
+To migrate new character art to this system:
+
+1. **Extract Art Data**: Load ASCII art from file or define as string
+2. **Create Scaler**: Initialize `VaultBoyScaler` with art data
+3. **Test Scaling**: Use `scale()` method with various target dimensions
+4. **Generate Variants**: Use `generate_variants()` for pre-defined sizes
+5. **Integrate**: Add as MCP tool with proper parameter handling

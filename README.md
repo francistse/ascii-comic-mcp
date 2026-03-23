@@ -16,6 +16,7 @@ A FastMCP server for generating comic-style ASCII art with speech bubbles, bold 
 - **Shapes**: Draw circles, rectangles, stars, arrows, and clouds
 - **Composition**: Combine multiple ASCII art elements together
 - **Visual Effects**: Add motion lines, sparkles, skid marks, and shadows
+- **Scalable Character Art**: Render Vault Boy and other character art at any size with quality scaling
 
 ## Installation
 
@@ -209,6 +210,46 @@ create_comic_panel(
 ### `list_ascii_styles`
 
 List all available ASCII art styles with their visual properties.
+
+### `generate_vault_boy`
+
+Generate Vault Boy ASCII art at various sizes with scalable rendering.
+
+```python
+generate_vault_boy(size='medium')              # Pre-defined sizes
+generate_vault_boy(size='custom', custom_width=80)  # Custom dimensions
+generate_vault_boy(scale_factor=0.5)           # Scale by factor
+```
+
+**Size Options:** `tiny` (25%), `small` (50%), `medium` (100%), `large` (150%), `extra_large` (200%)
+
+**Scaling Modes:** `fast` (nearest neighbor), `quality` (bilinear), `high_quality` (anti-aliased)
+
+### `get_vault_boy_info`
+
+Get information about Vault Boy dimensions and scaling options.
+
+```python
+get_vault_boy_info()
+```
+
+### `scale_vault_boy`
+
+Scale Vault Boy to specific dimensions.
+
+```python
+scale_vault_boy(target_width=100)
+scale_vault_boy(target_height=50, scaling_mode='high_quality')
+scale_vault_boy(scale_factor=0.75)
+```
+
+### `list_character_art`
+
+List all available character art templates.
+
+```python
+list_character_art()
+```
 
 ## ASCII Mode
 
