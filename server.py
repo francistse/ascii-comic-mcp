@@ -1988,7 +1988,7 @@ def ascii_config_set(key: str, value: str) -> str:
     Set ASCII mode configuration options.
 
     Args:
-        key: Configuration key (features, dialog, style)
+        key: Configuration key (features, dialog, style, width)
         value: Configuration value
 
     Returns:
@@ -1998,6 +1998,7 @@ def ascii_config_set(key: str, value: str) -> str:
         ascii_config_set(key='features', value='box,banner')
         ascii_config_set(key='dialog', value='always')
         ascii_config_set(key='style', value='heavy')
+        ascii_config_set(key='width', value='60')
     """
     manager = ASCIIModeManager.get_instance()
     result = manager.set_config(key, value)
