@@ -19,6 +19,7 @@ import json
 import sqlite3
 import random
 from datetime import datetime
+import pyfiglet
 
 # Initialize MCP server
 mcp = FastMCP("ASCII Comic Generator")
@@ -1606,6 +1607,7 @@ class ASCIIModeConfig:
     show_dialog_on_entry: Literal['always', 'first', 'never'] = 'first'
     has_entered_before: bool = False
     line_style: Literal['light', 'heavy', 'double', 'rounded'] = 'rounded'
+    max_width: int = 40
 
 
 class ASCIIModeManager:
@@ -1681,7 +1683,8 @@ class ASCIIModeManager:
                 "features": list(self.config.features),
                 "show_dialog_on_entry": self.config.show_dialog_on_entry,
                 "has_entered_before": self.config.has_entered_before,
-                "line_style": self.config.line_style
+                "line_style": self.config.line_style,
+                "max_width": self.config.max_width
             }
         }
 
@@ -1709,8 +1712,19 @@ class ASCIIModeManager:
             else:
                 return f"Invalid style. Use: light, heavy, double, rounded"
 
+        elif key == 'width':
+            try:
+                width = int(value)
+                if 20 <= width <= 120:
+                    self.config.max_width = width
+                    return f"Max width set to: {width}"
+                else:
+                    return f"Invalid width. Use a value between 20 and 120"
+            except ValueError:
+                return f"Invalid width. Use a number between 20 and 120"
+
         else:
-            return f"Unknown config key: {key}. Use: features, dialog, style"
+            return f"Unknown config key: {key}. Use: features, dialog, style, width"
 
     def transform_response(self, text: str, is_ai_response: bool = True) -> str:
         if self.state != 'active':
@@ -1725,13 +1739,11 @@ class ASCIIModeManager:
         if 'banner' in self.config.features:
             banner_text = self._extract_key_phrase(text)
             if banner_text:
-                banner = create_comic_banner(
-                    text=banner_text,
-                    font_style='block',
-                    emphasis='none',
-                    align='center'
-                )
-                lines_to_box.append(banner)
+                try:
+                    banner = pyfiglet.figlet_format(banner_text, font='mini')
+                    lines_to_box.append(banner)
+                except Exception:
+                    pass
 
         # Feature C: ASCII Art - generate complementary art
         if 'art' in self.config.features:
@@ -1748,12 +1760,9 @@ class ASCIIModeManager:
         if 'box' in self.config.features:
             lines = composed.split('\n')
 
-            # Key insight: Banners/art are decorative but the BOX must be max 40 chars
-            # Only text content gets wrapped at 38 chars; banners may be truncated
-
             art_chars = set('░▒▓█★╭╮╰╯─│┌┐└┘★•○●◉')
-            max_text_width = 38
-            max_box_width = 40
+            max_box_width = self.config.max_width
+            max_text_width = max_box_width - 2
 
             def is_decorative_line(line):
                 if not line:
@@ -1962,11 +1971,13 @@ def ascii_config_show() -> str:
         f"╠═══════════════════════════════════════════════════════════════╣\n"
         f"║  Dialog Behavior: {config['show_dialog_on_entry']:<41} ║\n"
         f"║  Line Style: {config['line_style']:<47} ║\n"
+        f"║  Max Width: {config['max_width']:<47} ║\n"
         f"╠═══════════════════════════════════════════════════════════════╣\n"
         f"║  Commands:                                                     ║\n"
         f"║    ascii config set features=box,banner,art    (customize)     ║\n"
         f"║    ascii config set dialog=always|first|never (dialog behavior)║\n"
         f"║    ascii config set style=rounded|heavy|light|double          ║\n"
+        f"║    ascii config set width=40                (20-120, default)  ║\n"
         f"╚═══════════════════════════════════════════════════════════════╝"
     )
 
@@ -2152,6 +2163,454 @@ def get_database_stats() -> Dict[str, Any]:
             "message": str(e),
             "available_templates": len(ASCII_TEMPLATES)
         }
+
+
+# ============================================================================
+# VAULT BOY ASCII ART - Scalable Character Rendering
+# ============================================================================
+
+VAULT_BOY_ART = """
+Vault Boy
+⢀⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶⣶
+⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣾
+⣿⠟⠋⠉⠉⠛⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠟⠻⣿⣿
+⣿⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣿
+⣿⣾⣿⣿⣿⣿⣿⡟⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠻⣿⣿⣿
+⣿⡿⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠻⣿
+⣿⣇⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣸
+⣿⠻⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿⠿
+⣿⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀
+⣿⠈⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉⠉
+⣿⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀⣀
+⣿⠟⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠛⠻
+"""
+
+
+class VaultBoyScaler:
+    """
+    Scalable rendering engine for Vault Boy ASCII art.
+    Maintains visual integrity across different scaling factors.
+    """
+
+    PRESERVED_CHARACTERS = {
+        'empty': ' ',
+        'light_shade': '░',
+        'medium_shade': '▒',
+        'dark_shade': '▓',
+        'full_block': '█',
+        'braille_blank': '⠀',
+    }
+
+    SCALING_MODES = {
+        'fast': 'Nearest neighbor scaling - fastest but lowest quality',
+        'quality': 'Bilinear interpolation - balanced speed and quality',
+        'high_quality': 'Anti-aliased scaling - best visual fidelity',
+    }
+
+    def __init__(self, art_data: str):
+        self.original_art = art_data
+        self.original_lines = art_data.strip().split('\n')
+        self.original_height = len(self.original_lines)
+        self.original_width = max(len(line) for line in self.original_lines) if self.original_lines else 0
+        self.header = self.original_lines[0] if self.original_lines else ""
+        self.art_lines = self.original_lines[1:] if len(self.original_lines) > 1 else []
+
+    def get_dimensions(self) -> Dict[str, int]:
+        """Get original dimensions of the ASCII art."""
+        return {
+            "width": self.original_width,
+            "height": self.original_height,
+            "header_length": len(self.header) if self.header else 0,
+            "art_height": len(self.art_lines)
+        }
+
+    def scale(self, target_width: Optional[int] = None, target_height: Optional[int] = None,
+              scale_factor: Optional[float] = None, mode: str = 'quality') -> str:
+        """
+        Scale the ASCII art to target dimensions or by a scale factor.
+
+        Args:
+            target_width: Target width in characters (None to calculate from target_height)
+            target_height: Target height in characters (None to calculate from target_width)
+            scale_factor: Alternative to dimensions - scale by this factor (e.g., 0.5 for half)
+            mode: Scaling mode ('fast', 'quality', 'high_quality')
+
+        Returns:
+            Scaled ASCII art string
+        """
+        if scale_factor is not None:
+            new_width = int(self.original_width * scale_factor)
+            new_height = int(self.original_height * scale_factor)
+        elif target_width is not None:
+            new_width = target_width
+            new_height = target_height if target_height else int(target_width * (self.original_height / self.original_width))
+        elif target_height is not None:
+            new_height = target_height
+            new_width = int(target_height * (self.original_width / self.original_height))
+        else:
+            return self.original_art
+
+        new_width = max(10, min(200, new_width))
+        new_height = max(5, min(150, new_height))
+
+        if mode == 'fast':
+            return self._scale_nearest(new_width, new_height)
+        elif mode == 'high_quality':
+            return self._scale_anti_aliased(new_width, new_height)
+        else:
+            return self._scale_bilinear(new_width, new_height)
+
+    def _scale_nearest(self, new_width: int, new_height: int) -> str:
+        """Fast nearest-neighbor scaling."""
+        if not self.art_lines:
+            return self.original_art
+
+        result_lines = []
+        height_ratio = len(self.art_lines) / new_height
+        width_ratio = self.original_width / new_width
+
+        for y in range(new_height):
+            src_y = min(int(y * height_ratio), len(self.art_lines) - 1)
+            src_line = self.art_lines[src_y].ljust(self.original_width)
+
+            new_line = ''
+            for x in range(new_width):
+                src_x = min(int(x * width_ratio), self.original_width - 1)
+                new_line += src_line[src_x] if src_x < len(src_line) else ' '
+
+            result_lines.append(new_line)
+
+        return '\n'.join(result_lines)
+
+    def _scale_bilinear(self, new_width: int, new_height: int) -> str:
+        """Bilinear interpolation for smoother scaling."""
+        if not self.art_lines:
+            return self.original_art
+
+        height_ratio = (len(self.art_lines) - 1) / max(1, new_height - 1)
+        width_ratio = (self.original_width - 1) / max(1, new_width - 1)
+
+        result_lines = []
+
+        for y in range(new_height):
+            src_y = y * height_ratio
+            y0 = min(int(src_y), len(self.art_lines) - 1)
+            y1 = min(y0 + 1, len(self.art_lines) - 1)
+            y_frac = src_y - y0
+
+            line0 = self.art_lines[y0].ljust(self.original_width)
+            line1 = self.art_lines[y1].ljust(self.original_width)
+
+            new_line = ''
+            for x in range(new_width):
+                src_x = x * width_ratio
+                x0 = min(int(src_x), self.original_width - 1)
+                x1 = min(x0 + 1, self.original_width - 1)
+                x_frac = src_x - x0
+
+                c00 = line0[x0] if x0 < len(line0) else ' '
+                c10 = line0[x1] if x1 < len(line0) else ' '
+                c01 = line1[x0] if x0 < len(line1) else ' '
+                c11 = line1[x1] if x1 < len(line1) else ' '
+
+                top = self._interpolate_chars(c00, c10, x_frac)
+                bottom = self._interpolate_chars(c01, c11, x_frac)
+                final_char = self._interpolate_chars(top, bottom, y_frac)
+
+                new_line += final_char
+
+            result_lines.append(new_line)
+
+        return '\n'.join(result_lines)
+
+    def _scale_anti_aliased(self, new_width: int, new_height: int) -> str:
+        """Anti-aliased scaling using character density analysis."""
+        if not self.art_lines:
+            return self.original_art
+
+        density_map = self._build_density_map()
+
+        height_ratio = len(self.art_lines) / new_height
+        width_ratio = self.original_width / new_width
+
+        result_lines = []
+
+        for y in range(new_height):
+            src_y = y * height_ratio
+            y0 = max(0, int(src_y) - 1)
+            y1 = min(int(src_y), len(self.art_lines) - 1)
+            y2 = min(int(src_y) + 1, len(self.art_lines) - 1)
+            y_frac = src_y - int(src_y)
+
+            line0 = self.art_lines[y0].ljust(self.original_width) if y0 < len(self.art_lines) else ' ' * self.original_width
+            line1 = self.art_lines[y1].ljust(self.original_width) if y1 < len(self.art_lines) else ' ' * self.original_width
+            line2 = self.art_lines[y2].ljust(self.original_width) if y2 < len(self.art_lines) else ' ' * self.original_width
+
+            new_line = ''
+            for x in range(new_width):
+                src_x = x * width_ratio
+                x0 = max(0, int(src_x) - 1)
+                x1 = min(int(src_x), self.original_width - 1)
+                x2 = min(int(src_x) + 1, self.original_width - 1)
+                x_frac = src_x - int(src_x)
+
+                samples = [
+                    line1[x1] if x1 < len(line1) else ' ',
+                    line1[x2] if x2 < len(line1) else ' ',
+                    line0[x1] if x1 < len(line0) else ' ',
+                    line2[x1] if x1 < len(line2) else ' ',
+                ]
+
+                weights = [
+                    (1 - x_frac) * (1 - y_frac),
+                    x_frac * (1 - y_frac),
+                    (1 - x_frac) * y_frac,
+                    x_frac * y_frac,
+                ]
+
+                final_char = self._weighted_sample(samples, weights)
+                new_line += final_char
+
+            result_lines.append(new_line)
+
+        return '\n'.join(result_lines)
+
+    def _build_density_map(self) -> Dict[tuple, float]:
+        """Build a density map for anti-aliased scaling."""
+        density = {}
+        char_weights = {
+            ' ': 0.0, '⠀': 0.0, '⠄': 0.25, '⠂': 0.33, '⠁': 0.5,
+            '⠃': 0.5, '⠇': 0.6, '⠏': 0.7, '⠟': 0.8, '⠿': 0.9, '⣿': 1.0,
+        }
+
+        for y, line in enumerate(self.art_lines):
+            for x, char in enumerate(line):
+                density[(y, x)] = char_weights.get(char, 0.5)
+
+        return density
+
+    def _interpolate_chars(self, c1: str, c2: str, frac: float) -> str:
+        """Interpolate between two characters based on density."""
+        d1 = self._char_density(c1)
+        d2 = self._char_density(c2)
+        result = d1 + (d2 - d1) * frac
+
+        return self._density_to_char(result)
+
+    def _char_density(self, char: str) -> float:
+        """Get density value for a character."""
+        if char in ' ⠀':
+            return 0.0
+        elif char in '⠄⠂⠁⠃⠈⠘⠰⠠':
+            return 0.3
+        elif char in '⠆⠄⠂⠇⠐⠘⠰⠸':
+            return 0.5
+        elif char in '⠇⠏⠛�셃':
+            return 0.7
+        elif char in '⠟⠿⣿░':
+            return 0.85
+        elif char in '▓█▒':
+            return 1.0
+        return 0.5
+
+    def _density_to_char(self, density: float) -> str:
+        """Convert density value to appropriate character."""
+        if density < 0.1:
+            return ' '
+        elif density < 0.3:
+            return '⠄'
+        elif density < 0.5:
+            return '⠂'
+        elif density < 0.6:
+            return '⠁'
+        elif density < 0.7:
+            return '⠇'
+        elif density < 0.8:
+            return '⠏'
+        elif density < 0.9:
+            return '⠟'
+        elif density < 0.95:
+            return '⠿'
+        else:
+            return '⣿'
+
+    def _weighted_sample(self, samples: List[str], weights: List[float]) -> str:
+        """Perform weighted sampling of characters."""
+        total_weight = sum(weights)
+        if total_weight == 0:
+            return ' '
+
+        densities = [self._char_density(s) for s in samples]
+        weighted_sum = sum(d * w for d, w in zip(densities, weights)) / total_weight
+
+        return self._density_to_char(weighted_sum)
+
+    def generate_variants(self) -> Dict[str, str]:
+        """Generate pre-defined size variants."""
+        variants = {}
+
+        variants['tiny'] = self.scale(scale_factor=0.25, mode='fast')
+        variants['small'] = self.scale(scale_factor=0.5, mode='fast')
+        variants['medium'] = self.scale(scale_factor=1.0, mode='quality')
+        variants['large'] = self.scale(scale_factor=1.5, mode='quality')
+        variants['extra_large'] = self.scale(scale_factor=2.0, mode='high_quality')
+
+        return variants
+
+
+_vault_boy_scaler: Optional[VaultBoyScaler] = None
+
+
+def get_vault_boy_scaler() -> VaultBoyScaler:
+    """Get or create the Vault Boy scaler singleton."""
+    global _vault_boy_scaler
+    if _vault_boy_scaler is None:
+        vault_boy_path = os.path.join(os.path.dirname(__file__), 'ascii_learning', 'data', 'vault_boy.txt')
+
+        if os.path.exists(vault_boy_path):
+            with open(vault_boy_path, 'r', encoding='utf-8') as f:
+                art_data = f.read()
+        else:
+            art_data = VAULT_BOY_ART
+
+        _vault_boy_scaler = VaultBoyScaler(art_data)
+
+    return _vault_boy_scaler
+
+
+@mcp.tool()
+def generate_vault_boy(
+    size: Literal['tiny', 'small', 'medium', 'large', 'extra_large', 'custom'] = 'medium',
+    custom_width: Optional[int] = None,
+    custom_height: Optional[int] = None,
+    scale_factor: Optional[float] = None,
+    scaling_mode: Literal['fast', 'quality', 'high_quality'] = 'quality'
+) -> str:
+    """
+    Generate Vault Boy ASCII art at various sizes.
+
+    Args:
+        size: Pre-defined size variant (tiny=25%, small=50%, medium=100%,
+              large=150%, extra_large=200%, custom=use custom dimensions)
+        custom_width: Target width for custom size (required if size='custom')
+        custom_height: Target height for custom size (optional, auto-calculated)
+        scale_factor: Override scaling with a specific factor (e.g., 0.75)
+        scaling_mode: Scaling algorithm quality ('fast', 'quality', 'high_quality')
+
+    Returns:
+        Vault Boy ASCII art at requested size
+
+    Example:
+        generate_vault_boy(size='small')
+        generate_vault_boy(size='custom', custom_width=60)
+        generate_vault_boy(scale_factor=0.5, scaling_mode='fast')
+    """
+    scaler = get_vault_boy_scaler()
+
+    if size == 'custom':
+        if custom_width is None and scale_factor is None:
+            return "Error: custom_width or scale_factor required for custom size"
+        return scaler.scale(
+            target_width=custom_width,
+            target_height=custom_height,
+            scale_factor=scale_factor,
+            mode=scaling_mode
+        )
+
+    if scale_factor is not None:
+        return scaler.scale(scale_factor=scale_factor, mode=scaling_mode)
+
+    variants = scaler.generate_variants()
+    return variants.get(size, variants['medium'])
+
+
+@mcp.tool()
+def get_vault_boy_info() -> Dict[str, Any]:
+    """
+    Get information about the Vault Boy ASCII art and available scaling options.
+
+    Returns:
+        Dictionary with dimensions, scaling modes, and size options
+
+    Example:
+        get_vault_boy_info()
+    """
+    scaler = get_vault_boy_scaler()
+    dimensions = scaler.get_dimensions()
+
+    return {
+        "character": "Vault Boy",
+        "original_dimensions": dimensions,
+        "scaling_modes": VaultBoyScaler.SCALING_MODES,
+        "size_variants": {
+            "tiny": {"scale": 0.25, "approx_width": int(dimensions['width'] * 0.25)},
+            "small": {"scale": 0.5, "approx_width": int(dimensions['width'] * 0.5)},
+            "medium": {"scale": 1.0, "approx_width": dimensions['width']},
+            "large": {"scale": 1.5, "approx_width": int(dimensions['width'] * 1.5)},
+            "extra_large": {"scale": 2.0, "approx_width": int(dimensions['width'] * 2.0)},
+        },
+        "usage": "Use generate_vault_boy(size='variant') to render at specific size"
+    }
+
+
+@mcp.tool()
+def scale_vault_boy(
+    target_width: Optional[int] = None,
+    target_height: Optional[int] = None,
+    scale_factor: Optional[float] = None,
+    scaling_mode: Literal['fast', 'quality', 'high_quality'] = 'quality'
+) -> str:
+    """
+    Scale Vault Boy ASCII art to specific dimensions.
+
+    Args:
+        target_width: Desired output width in characters (None to use scale_factor)
+        target_height: Desired output height (auto-calculated if None)
+        scale_factor: Alternative - scale by this factor
+        scaling_mode: Algorithm quality ('fast', 'quality', 'high_quality')
+
+    Returns:
+        Scaled Vault Boy ASCII art
+
+    Example:
+        scale_vault_boy(target_width=80)
+        scale_vault_boy(scale_factor=0.75)
+        scale_vault_boy(target_height=30, scaling_mode='high_quality')
+    """
+    scaler = get_vault_boy_scaler()
+
+    return scaler.scale(
+        target_width=target_width,
+        target_height=target_height,
+        scale_factor=scale_factor,
+        mode=scaling_mode
+    )
+
+
+@mcp.tool()
+def list_character_art() -> Dict[str, Any]:
+    """
+    List all available character art templates.
+
+    Returns:
+        Dictionary with available character art options
+
+    Example:
+        list_character_art()
+    """
+    return {
+        "characters": [
+            {
+                "name": "vault_boy",
+                "description": "Vault Boy from Fallout series",
+                "dimensions": get_vault_boy_scaler().get_dimensions(),
+                "sizes": ["tiny", "small", "medium", "large", "extra_large"],
+                "usage": "generate_vault_boy(size='medium')"
+            }
+        ],
+        "total_count": 1,
+        "example_usage": "generate_vault_boy(size='small')"
+    }
 
 
 # ============================================================================
