@@ -1841,29 +1841,35 @@ class ASCIIModeManager:
                 line_style='rounded'
             )
         elif any(word in text_lower for word in ['thank', 'thanks', 'appreciate']):
-            return create_comic_banner(
-                text="THANKS!",
-                font_style='block',
-                emphasis='stars',
-                align='center'
-            )
+            shapes = [
+                draw_shape('heart', 12, 8, '♥', '─'),
+                draw_shape('star', 10, 8, '★', '─')
+            ]
+            return compose_elements(shapes, layout='horizontal', spacing=3)
         elif any(word in text_lower for word in ['yes', 'yeah', 'yep', 'correct']):
             shapes = [
-                draw_shape('circle', 15, 8, '█', '─'),
-                draw_shape('rectangle', 10, 5, '█', '─')
+                draw_shape('circle', 12, 6, '●', '─'),
+                draw_shape('arrow', 10, 6, '►', '─')
             ]
             return compose_elements(shapes, layout='horizontal', spacing=3)
         elif any(word in text_lower for word in ['no', 'nope', 'not', 'wrong']):
-            return create_action_effect('ZAP', size='medium', style='bold')
+            shapes = [
+                draw_shape('rectangle', 10, 5, '■', '─'),
+                draw_shape('x', 8, 5, '×', '─')
+            ]
+            return compose_elements(shapes, layout='horizontal', spacing=3)
         elif any(word in text_lower for word in ['wow', 'amazing', 'awesome', 'cool']):
             return create_action_effect('BOOM', size='medium', style='bold')
         elif any(word in text_lower for word in ['sorry', 'apologize', 'mistake']):
-            cloud = draw_shape('cloud', 25, 6, '░', '.')
+            cloud = draw_shape('cloud', 25, 6, '☁', '─')
             return add_effect(cloud, 'sparkles', position='top', intensity=2)
+        elif any(word in text_lower for word in ['love', 'heart', 'like']):
+            heart = draw_shape('heart', 14, 8, '♥', '─')
+            return add_effect(heart, 'sparkles', position='bottom', intensity=2)
 
         shapes = [
-            draw_shape('rectangle', 12, 6, '▒', '─'),
-            draw_shape('cloud', 18, 5, '░', '.')
+            draw_shape('rectangle', 12, 6, '■', '─'),
+            draw_shape('cloud', 18, 5, '☁', '─')
         ]
         return compose_elements(shapes, layout='horizontal', spacing=2)
 
